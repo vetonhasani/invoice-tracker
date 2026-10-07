@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe7fe;
+  --color-brand-200: #bfd3fe;
+  --color-brand-500: #3b6cf6;
+  --color-brand-600: #2557eb;
+  --color-brand-700: #1d45c9;
+  --color-brand-900: #172a63;
+
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-line: #e7eaf0;
+  --color-canvas: #f6f7fb;
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 1px rgb(15 23 42 / 0.03);
+  --shadow-pop: 0 12px 32px -8px rgb(15 23 42 / 0.18), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  --animate-sheet-up: sheet-up 240ms cubic-bezier(0.2, 0.9, 0.3, 1);
+
+  @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(0.98) } to { opacity: 1; transform: none } }
+  @keyframes sheet-up { from { transform: translateY(100%) } to { transform: none } }
+}
+
+html { -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-feature-settings: "cv11", "ss01";
+}
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* hide number spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+@media print {
+  header, nav, button, select, input { display: none !important; }
+  body { background: white; }
+}
