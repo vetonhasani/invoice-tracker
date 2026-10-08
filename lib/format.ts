@@ -1,5 +1,6 @@
-export const euro = (v: number) =>
-  "€" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Macedonian denar: 1,250 Den / 26.50 Den (decimals only when needed) */
+export const den = (v: number) =>
+  v.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 2 }) + " Den";
 
 /** 2026-10-07 -> 07.10.2026 */
 export const dateSq = (iso: string) => {
@@ -14,11 +15,14 @@ export const dateTimeSq = (iso: string) => {
   return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 
-export const todayIso = () => {
-  const d = new Date();
+/** ISO date-time -> local calendar day YYYY-MM-DD */
+export const localDay = (iso: string) => {
+  const d = new Date(iso);
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
+
+export const todayIso = () => localDay(new Date().toISOString());
 
 export const initials = (name: string) =>
   name

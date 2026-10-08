@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Button, Field, Input, Modal, inputCls, cn } from "./ui";
+import { dateSq, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { Client } from "@/lib/types";
 
-type Values = { name: string; phone: string; address: string; note: string };
+type Values = { name: string; phone: string; address: string; note: string; createdAt: string };
 
 export function ClientForm({
   open,
@@ -19,12 +20,18 @@ export function ClientForm({
   onSave: (v: Values) => void;
 }) {
   const { t } = useT();
-  const [v, setV] = useState<Values>({ name: "", phone: "", address: "", note: "" });
+  const [v, setV] = useState<Values>({ name: "", phone: "", address: "", note: "", createdAt: todayIso() });
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
-      setV({ name: initial?.name ?? "", phone: initial?.phone ?? "", address: initial?.address ?? "", note: initial?.note ?? "" });
+      setV({
+        name: initial?.name ?? "",
+        phone: initial?.phone ?? "",
+        address: initial?.address ?? "",
+        note: initial?.note ?? "",
+        createdAt: initial?.createdAt ?? todayIso(), // new client → today, can be changed
+      });
       setError("");
     }
   }, [open, initial]);
@@ -32,7 +39,8 @@ export function ClientForm({
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!v.name.trim()) return setError(t.clientForm.nameRequired);
-    onSave({ ...v, name: v.name.trim() });
+    // The date is when the client was first added — set once, never changed by editing
+    onSave({ ...v, name: v.name.trim(), createdAt: initial?.createdAt ?? (v.createdAt || todayIso()) });
     onClose();
   };
 
@@ -65,6 +73,15 @@ export function ClientForm({
             <Input value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} placeholder={t.clientForm.addressPh} />
           </Field>
         </div>
+        {initial ? (
+          <Field label={t.clients.colAdded}>
+            <div className={cn(inputCls, "tabular flex items-center bg-slate-50 text-muted shadow-none")}>{dateSq(initial.createdAt)}</div>
+          </Field>
+        ) : (
+          <Field label={t.clients.colAdded}>
+            <Input type="date" value={v.createdAt} onChange={(e) => setV({ ...v, createdAt: e.target.value })} />
+          </Field>
+        )}
         <Field label={t.clientForm.note}>
           <textarea
             rows={3}

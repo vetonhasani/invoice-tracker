@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Client, Company, Entry, Material, User } from "./types";
 import { seedClients, seedCompanies, seedEntries, seedMaterials } from "./seed";
-import { uid } from "./format";
+import { todayIso, uid } from "./format";
 
 /**
  * UI-only data layer. Everything lives in React state and is mirrored to
@@ -19,7 +19,7 @@ type Store = State & {
   login: (email: string, name?: string) => void;
   logout: () => void;
   // clients
-  addClient: (c: Omit<Client, "id" | "createdAt">) => Client;
+  addClient: (c: Omit<Client, "id" | "createdAt"> & { createdAt?: string }) => Client;
   updateClient: (id: string, c: Partial<Client>) => void;
   deleteClient: (id: string) => void;
   // companies (suppliers)
@@ -27,8 +27,9 @@ type Store = State & {
   updateCompany: (id: string, c: Partial<Company>) => void;
   deleteCompany: (id: string) => void;
   // catalog — a price change appends to the material's priceHistory
-  addMaterial: (m: Omit<Material, "id" | "priceHistory">) => Material;
-  updateMaterial: (id: string, m: Partial<Omit<Material, "id" | "priceHistory">>) => void;
+  // `date` (YYYY-MM-DD) is when the price applies; defaults to now
+  addMaterial: (m: Omit<Material, "id" | "priceHistory">, date?: string) => Material;
+  updateMaterial: (id: string, m: Partial<Omit<Material, "id" | "priceHistory">>, date?: string) => void;
   deleteMaterial: (id: string) => void;
   // entries
   addEntry: (e: Omit<Entry, "id">) => void;
@@ -47,7 +48,15 @@ const initial: State = {
 };
 
 const nowIso = () => new Date().toISOString();
-const today = () => nowIso().slice(0, 10);
+
+/** Price-point timestamp for a picked day: today → now; another day → that day at the current local time. */
+const atDate = (date?: string) => {
+  if (!date || date === todayIso()) return nowIso();
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${date}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+const today = todayIso;
 
 /** Older saved data has no price history — start it at the current price. */
 function migrate(s: State): State {
@@ -89,7 +98,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       logout: () => set((s) => ({ ...s, user: null })),
 
       addClient: (c) => {
-        const client: Client = { ...c, id: uid(), createdAt: today() };
+        const client: Client = { ...c, id: uid(), createdAt: c.createdAt || today() };
         set((s) => ({ ...s, clients: [client, ...s.clients] }));
         return client;
       },
@@ -117,12 +126,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           materials: s.materials.map((m) => (m.companyId === id ? { ...m, companyId: undefined } : m)),
         })),
 
-      addMaterial: (m) => {
-        const mat: Material = { ...m, id: uid(), priceHistory: [{ at: nowIso(), price: m.price }] };
+      addMaterial: (m, date) => {
+        const mat: Material = { ...m, id: uid(), priceHistory: [{ at: atDate(date), price: m.price }] };
         set((s) => ({ ...s, materials: [...s.materials, mat] }));
         return mat;
       },
-      updateMaterial: (id, m) =>
+      updateMaterial: (id, m, date) =>
         set((s) => ({
           ...s,
           materials: s.materials.map((x) => {
@@ -131,7 +140,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             return {
               ...x,
               ...m,
-              priceHistory: changed ? [...x.priceHistory, { at: nowIso(), price: m.price! }] : x.priceHistory,
+              priceHistory: changed ? [...x.priceHistory, { at: atDate(date), price: m.price! }] : x.priceHistory,
             };
           }),
         })),

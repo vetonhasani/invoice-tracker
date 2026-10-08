@@ -7,7 +7,7 @@ import { Fab, PageHeader } from "@/components/page-header";
 import { PriceHistoryModal, TrendBadge, lastChange } from "@/components/price-history";
 import { Button, Card, Confirm, Empty, Field, Input, Menu, Modal, SearchBox, cn, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { UNITS, euro } from "@/lib/format";
+import { UNITS, dateSq, den, localDay, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import type { Material } from "@/lib/types";
@@ -133,7 +133,7 @@ function MaterialsPage() {
                     <td className="px-5 py-3">
                       <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{unit(m.unit)}</span>
                     </td>
-                    <td className="tabular px-5 py-3 text-right font-semibold">{euro(m.price)}</td>
+                    <td className="tabular px-5 py-3 text-right font-semibold">{den(m.price)}</td>
                     <td className="px-5 py-3">
                       {m.change ? (
                         <button onClick={() => setHistoryId(m.id)} title={t.materials.priceHistory}>
@@ -166,7 +166,7 @@ function MaterialsPage() {
                       </span>
                     </span>
                     <span className="flex flex-col items-end gap-1">
-                      <span className="tabular font-semibold">{euro(m.price)}</span>
+                      <span className="tabular font-semibold">{den(m.price)}</span>
                       {m.change && <TrendBadge from={m.change.from} to={m.change.to} className="px-1.5 text-[11px]" />}
                     </span>
                   </button>
@@ -195,12 +195,12 @@ function MaterialsPage() {
         onClose={() => setFormOpen(false)}
         initial={editing}
         defaultCompanyId={company !== "all" && company !== "none" ? company : undefined}
-        onSave={(v) => {
+        onSave={(v, date) => {
           if (editing) {
-            updateMaterial(editing.id, v);
+            updateMaterial(editing.id, v, date);
             toast(t.materials.updated);
           } else {
-            addMaterial(v);
+            addMaterial(v, date);
             toast(t.materials.added);
           }
         }}
@@ -230,7 +230,7 @@ function MaterialForm({
   onClose: () => void;
   initial: Material | null;
   defaultCompanyId?: string;
-  onSave: (v: Omit<Material, "id" | "priceHistory">) => void;
+  onSave: (v: Omit<Material, "id" | "priceHistory">, date: string) => void;
 }) {
   const { companies } = useStore();
   const { t, unit: unitLabel } = useT();
@@ -238,7 +238,12 @@ function MaterialForm({
   const [unit, setUnit] = useState("copë");
   const [price, setPrice] = useState("");
   const [companyId, setCompanyId] = useState("");
+  const [date, setDate] = useState(todayIso());
   const [err, setErr] = useState<Record<string, string>>({});
+
+  // A price change can't be dated before the last recorded one, so the history stays in order
+  const lastAt = initial?.priceHistory[initial.priceHistory.length - 1]?.at;
+  const minDate = lastAt ? localDay(lastAt) : undefined;
 
   useEffect(() => {
     if (!open) return;
@@ -246,6 +251,7 @@ function MaterialForm({
     setUnit(initial?.unit ?? "copë");
     setPrice(initial ? initial.price.toFixed(2) : "");
     setCompanyId(initial ? initial.companyId ?? "" : defaultCompanyId ?? "");
+    setDate(todayIso());
     setErr({});
   }, [open, initial, defaultCompanyId]);
 
@@ -254,9 +260,10 @@ function MaterialForm({
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = t.materials.nameRequired;
     if (!(p >= 0) || price === "") e.price = t.entryForm.enterPrice;
+    if (minDate && date < minDate) e.date = t.materials.dateBeforeLast(dateSq(minDate));
     setErr(e);
     if (Object.keys(e).length) return;
-    onSave({ name: name.trim(), unit, price: p, companyId: companyId || undefined });
+    onSave({ name: name.trim(), unit, price: p, companyId: companyId || undefined }, date || todayIso());
     onClose();
   };
 
@@ -295,10 +302,13 @@ function MaterialForm({
               {UNITS.map((u) => <option key={u} value={u}>{unitLabel(u)}</option>)}
             </select>
           </Field>
-          <Field label={t.materials.price} error={err.price} hint={initial ? t.materials.priceChangeHint : undefined}>
+          <Field label={t.materials.price} error={err.price}>
             <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
           </Field>
         </div>
+        <Field label={t.materials.priceDate} error={err.date} hint={initial ? t.materials.priceChangeHint : undefined}>
+          <Input type="date" value={date} min={minDate} onChange={(e) => setDate(e.target.value)} />
+        </Field>
         <button type="submit" className="hidden" />
       </form>
     </Modal>

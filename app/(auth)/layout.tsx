@@ -50,14 +50,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div className="tabular text-right">
                 <div className="text-xs text-muted">{t.clients.colTotal}</div>
-                <div className="font-bold">€1,747.00</div>
+                <div className="font-bold">107,400 Den</div>
               </div>
             </div>
             <div className="mt-4 space-y-2 text-sm">
               {[
-                ["Çimento 25kg", "40 × €6.50", "€260.00"],
-                ["Tulla 25×12", "500 × €0.42", "€210.00"],
-                ["Hekur armature Ø12", "80 × €7.90", "€632.00"],
+                ["Çimento 25kg", "40 × 400 Den", "16,000 Den"],
+                ["Tulla 25×12", "500 × 26 Den", "13,000 Den"],
+                ["Hekur armature Ø12", "80 × 485 Den", "38,800 Den"],
               ].map(([a, b, c]) => (
                 <div key={a} className="tabular flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
                   <span className="font-medium">{a}</span>

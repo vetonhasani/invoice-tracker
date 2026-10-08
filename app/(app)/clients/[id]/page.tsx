@@ -9,7 +9,7 @@ import { EntryForm } from "@/components/entry-form";
 import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat, cn, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { dateSq, euro, todayIso } from "@/lib/format";
+import { dateSq, den, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { entryTotal, sumEntries, useStore } from "@/lib/store";
 import type { Entry } from "@/lib/types";
@@ -103,9 +103,9 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Stat accent className="col-span-2 sm:col-span-1" label={t.client.statTotal} value={euro(sumEntries(mine))} icon={<Wallet size={15} />} />
+        <Stat accent className="col-span-2 sm:col-span-1" label={t.client.statTotal} value={den(sumEntries(mine))} icon={<Wallet size={15} />} />
         <Stat label={t.client.statItems} value={mine.length} icon={<Package size={15} />} />
-        <Stat label={t.client.statMonth} value={euro(thisMonth)} icon={<TrendingUp size={15} />} />
+        <Stat label={t.client.statMonth} value={den(thisMonth)} icon={<TrendingUp size={15} />} />
       </div>
 
       <Card className="overflow-hidden">
@@ -159,8 +159,8 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                     <td className="tabular px-5 py-3.5 text-right">
                       {e.qty} <span className="text-xs text-muted">{unit(e.unit)}</span>
                     </td>
-                    <td className="tabular px-5 py-3.5 text-right text-muted">{euro(e.price)}</td>
-                    <td className="tabular px-5 py-3.5 text-right font-semibold">{euro(entryTotal(e))}</td>
+                    <td className="tabular px-5 py-3.5 text-right text-muted">{den(e.price)}</td>
+                    <td className="tabular px-5 py-3.5 text-right font-semibold">{den(entryTotal(e))}</td>
                     <td className="px-3 py-3.5 text-right">
                       <EntryMenu onEdit={() => { setEditingEntry(e); setEntryOpen(true); }} onDelete={() => setDeletingEntry(e)} />
                     </td>
@@ -172,7 +172,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                   <td className="px-5 py-4 font-bold" colSpan={4}>
                     {t.common.total} {month !== "all" && <span className="font-medium text-muted">· {monthLabel(month)}</span>}
                   </td>
-                  <td className="tabular px-5 py-4 text-right text-base font-bold">{euro(sumEntries(rows))}</td>
+                  <td className="tabular px-5 py-4 text-right text-base font-bold">{den(sumEntries(rows))}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -185,11 +185,11 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-3">
                       <span className="truncate font-semibold">{e.name}</span>
-                      <span className="tabular font-semibold">{euro(entryTotal(e))}</span>
+                      <span className="tabular font-semibold">{den(entryTotal(e))}</span>
                     </div>
                     <div className="tabular mt-0.5 flex justify-between gap-3 text-[13px] text-muted">
                       <span className="truncate">{dateSq(e.date)}{e.companyName && ` · ${e.companyName}`}</span>
-                      <span>{e.qty} {unit(e.unit)} × {euro(e.price)}</span>
+                      <span>{e.qty} {unit(e.unit)} × {den(e.price)}</span>
                     </div>
                   </div>
                   <EntryMenu onEdit={() => { setEditingEntry(e); setEntryOpen(true); }} onDelete={() => setDeletingEntry(e)} />
@@ -197,7 +197,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
               ))}
               <li className="flex justify-between bg-slate-50/70 px-4 py-4 font-bold">
                 <span>{t.common.total}</span>
-                <span className="tabular">{euro(sumEntries(rows))}</span>
+                <span className="tabular">{den(sumEntries(rows))}</span>
               </li>
             </ul>
           </>

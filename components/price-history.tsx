@@ -2,7 +2,7 @@
 
 import { ArrowDownRight, ArrowUpRight, Building2, Minus, Pencil } from "lucide-react";
 import { Button, Modal, cn } from "./ui";
-import { dateTimeSq, euro } from "@/lib/format";
+import { dateTimeSq, den } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { Material, PricePoint } from "@/lib/types";
 
@@ -13,7 +13,7 @@ export function lastChange(m: Material) {
   return { from: h[h.length - 2].price, to: h[h.length - 1].price, at: h[h.length - 1].at };
 }
 
-/** ▲ +€0.40 (+6.2%) / ▼ −€0.30 (−4.1%). Direction is always shown by icon + sign, not color alone. */
+/** ▲ +25 Den (+6.2%) / ▼ −20 Den (−4.1%). Direction is always shown by icon + sign, not color alone. */
 export function TrendBadge({ from, to, className }: { from: number; to: number; className?: string }) {
   const diff = to - from;
   const pct = from ? (diff / from) * 100 : 0;
@@ -29,7 +29,7 @@ export function TrendBadge({ from, to, className }: { from: number; to: number; 
       )}
     >
       <Icon size={13} strokeWidth={2.5} />
-      {flat ? "0%" : `${up ? "+" : "−"}${euro(Math.abs(diff))} (${up ? "+" : "−"}${Math.abs(pct).toFixed(1)}%)`}
+      {flat ? "0%" : `${up ? "+" : "−"}${den(Math.abs(diff))} (${up ? "+" : "−"}${Math.abs(pct).toFixed(1)}%)`}
     </span>
   );
 }
@@ -81,10 +81,10 @@ export function PriceHistoryModal({
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Mini label={t.materials.current} value={euro(material.price)} strong />
-          <Mini label={t.materials.initialPrice} value={euro(first.price)} />
-          <Mini label={t.materials.lowest} value={euro(Math.min(...prices))} />
-          <Mini label={t.materials.highest} value={euro(Math.max(...prices))} />
+          <Mini label={t.materials.current} value={den(material.price)} strong />
+          <Mini label={t.materials.initialPrice} value={den(first.price)} />
+          <Mini label={t.materials.lowest} value={den(Math.min(...prices))} />
+          <Mini label={t.materials.highest} value={den(Math.max(...prices))} />
         </div>
 
         {changes > 0 && (
@@ -106,7 +106,7 @@ export function PriceHistoryModal({
             {rows.map((p, i) => (
               <li key={p.at + i} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-3 py-2.5 text-sm">
                 <span className="tabular text-muted">{dateTimeSq(p.at)}</span>
-                <span className="tabular text-right font-semibold">{euro(p.price)}</span>
+                <span className="tabular text-right font-semibold">{den(p.price)}</span>
                 <span className="w-32 text-right">
                   {p.prev === null ? (
                     <span className="text-xs font-medium text-muted">{t.materials.initialPrice}</span>
@@ -165,7 +165,7 @@ function StepChart({ points }: { points: PricePoint[] }) {
         <g key={v}>
           <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="var(--color-line)" strokeDasharray="3 3" />
           <text x={pad.l - 6} y={y(v) + 3.5} textAnchor="end" className="tabular fill-muted text-[10px]">
-            {euro(v)}
+            {den(v)}
           </text>
         </g>
       ))}
@@ -175,7 +175,7 @@ function StepChart({ points }: { points: PricePoint[] }) {
           <circle cx={x(times[i])} cy={y(p.price)} r={4} fill="var(--color-brand-600)" stroke="white" strokeWidth={2} />
           {/* larger invisible hit target */}
           <circle cx={x(times[i])} cy={y(p.price)} r={12} fill="transparent">
-            <title>{`${day(p.at)} · ${euro(p.price)}`}</title>
+            <title>{`${day(p.at)} · ${den(p.price)}`}</title>
           </circle>
         </g>
       ))}

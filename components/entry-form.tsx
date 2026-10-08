@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Package, Plus, RotateCcw, Sparkles } from "lucide-react";
 import { Avatar, Button, Field, Input, Modal, cn, inputCls } from "./ui";
-import { UNITS, euro, todayIso } from "@/lib/format";
+import { UNITS, den, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import type { Client, Entry, Material } from "@/lib/types";
@@ -99,7 +99,7 @@ export function EntryForm({
     if (Object.keys(err).length) return;
 
     let m = material!;
-    if (newMat) m = addMaterial({ name: newMat.name.trim(), unit: newMat.unit, price: priceN, companyId: companyId || undefined });
+    if (newMat) m = addMaterial({ name: newMat.name.trim(), unit: newMat.unit, price: priceN, companyId: companyId || undefined }, date);
 
     const company = companies.find((c) => c.id === m.companyId);
     const data = {
@@ -217,7 +217,7 @@ export function EntryForm({
                   onClick={() => setPrice(catalogPrice.toFixed(2))}
                   className="flex items-center gap-1 text-[11px] font-semibold text-brand-600"
                 >
-                  <RotateCcw size={11} /> {euro(catalogPrice)}
+                  <RotateCcw size={11} /> {den(catalogPrice)}
                 </button>
               ))
             }
@@ -240,10 +240,10 @@ export function EntryForm({
           <div>
             <div className="text-[13px] font-semibold text-brand-900">{t.cols.amount}</div>
             <div className="tabular text-xs text-brand-700/70">
-              {isFinite(qtyN) && qtyN > 0 && isFinite(priceN) ? `${qtyN} × ${euro(priceN)}` : t.entryForm.formula}
+              {isFinite(qtyN) && qtyN > 0 && isFinite(priceN) ? `${qtyN} × ${den(priceN)}` : t.entryForm.formula}
             </div>
           </div>
-          <div className="tabular text-2xl font-bold tracking-tight text-brand-700">{euro(total)}</div>
+          <div className="tabular text-2xl font-bold tracking-tight text-brand-700">{den(total)}</div>
         </div>
         <button type="submit" className="hidden" />
       </form>
@@ -320,7 +320,7 @@ function MaterialPicker({
             <span>{t.entryForm.pickPh}</span>
           )}
           <span className="flex shrink-0 items-center gap-2 text-sm text-muted">
-            {value && `${euro(value.price)} / ${unit(value.unit)}`}
+            {value && `${den(value.price)} / ${unit(value.unit)}`}
             {newName && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-700">{t.entryForm.isNew}</span>}
             <ChevronDown size={16} />
           </span>
@@ -363,7 +363,7 @@ function MaterialPicker({
                 <span className="block truncate text-xs text-muted">{companyName(m.companyId) ?? t.companies.none}</span>
               </span>
               <span className="tabular shrink-0 text-sm text-muted">
-                {euro(m.price)} <span className="text-xs">/ {unit(m.unit)}</span>
+                {den(m.price)} <span className="text-xs">/ {unit(m.unit)}</span>
               </span>
               {value?.id === m.id && <Check size={16} className="text-brand-600" />}
             </button>

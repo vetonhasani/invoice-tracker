@@ -9,7 +9,7 @@ import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { PeriodTabs, TotalHistory, historyYears, type Period } from "@/components/total-history";
-import { dateSq, euro } from "@/lib/format";
+import { dateSq, den } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { sumEntries, useStore } from "@/lib/store";
 import type { Client } from "@/lib/types";
@@ -64,7 +64,7 @@ export default function ClientsPage() {
           accent
           className="col-span-2 sm:col-span-1"
           label={period === "all" ? t.clients.statTotal : t.history.totalFor(period)}
-          value={euro(grand)}
+          value={den(grand)}
           icon={<Wallet size={15} />}
         />
         <Stat label={t.clients.statClients} value={clients.length} icon={<Users size={15} />} />
@@ -93,6 +93,7 @@ export default function ClientsPage() {
                 <tr className="border-b border-line bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
                   <th className="px-5 py-3">{t.clients.colClient}</th>
                   <th className="px-5 py-3">{t.clients.colPhone}</th>
+                  <th className="px-5 py-3">{t.clients.colAdded}</th>
                   <th className="px-5 py-3 text-right">{t.clients.colMaterials}</th>
                   <th className="px-5 py-3">{t.clients.colLast}</th>
                   <th className="px-5 py-3 text-right">{t.clients.colTotal}</th>
@@ -116,9 +117,10 @@ export default function ClientsPage() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-muted">{c.phone || "—"}</td>
+                    <td className="tabular px-5 py-3.5 text-muted">{dateSq(c.createdAt)}</td>
                     <td className="tabular px-5 py-3.5 text-right">{c.count}</td>
                     <td className="tabular px-5 py-3.5 text-muted">{c.last ? dateSq(c.last) : "—"}</td>
-                    <td className="tabular px-5 py-3.5 text-right font-semibold">{euro(c.total)}</td>
+                    <td className="tabular px-5 py-3.5 text-right font-semibold">{den(c.total)}</td>
                     <td className="px-3 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <RowMenu onEdit={() => { setEditing(c); setFormOpen(true); }} onDelete={() => setDeleting(c)} />
@@ -142,7 +144,7 @@ export default function ClientsPage() {
                         {t.common.materialsCount(c.count)}{c.last && ` · ${dateSq(c.last)}`}
                       </div>
                     </div>
-                    <div className="tabular text-right font-semibold">{euro(c.total)}</div>
+                    <div className="tabular text-right font-semibold">{den(c.total)}</div>
                     <ChevronRight size={18} className="text-slate-300" />
                   </Link>
                 </li>

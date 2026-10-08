@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, cn } from "./ui";
-import { euro } from "@/lib/format";
+import { den } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { sumEntries } from "@/lib/store";
 import type { Entry } from "@/lib/types";
@@ -86,7 +86,7 @@ export function TotalHistory({
                 />
               </span>
               <span className="tabular text-right">
-                <span className="block text-sm font-semibold">{euro(y.total)}</span>
+                <span className="block text-sm font-semibold">{den(y.total)}</span>
                 <span className="block text-[11px] text-muted">{t.history.entriesIn(y.count)}</span>
               </span>
             </button>
@@ -101,7 +101,7 @@ export function TotalHistory({
           >
             <span className="text-sm font-bold">{t.history.allTime}</span>
             <span className="tabular text-right">
-              <span className="block font-bold">{euro(allTotal)}</span>
+              <span className="block font-bold">{den(allTotal)}</span>
               <span className="block text-[11px] text-muted">{t.history.entriesIn(entries.length)}</span>
             </span>
           </button>
@@ -128,13 +128,13 @@ function MonthBars({ entries, year }: { entries: Entry[]; year: string }) {
         <span className="text-sm font-semibold">{t.history.byMonth(year)}</span>
         {best.total > 0 && (
           <span className="tabular text-xs text-muted">
-            {best.name}: <b className="text-ink">{euro(best.total)}</b>
+            {best.name}: <b className="text-ink">{den(best.total)}</b>
           </span>
         )}
       </div>
       <div className="flex h-36 items-end gap-[2px] border-b border-line">
         {months.map((m) => (
-          <div key={m.name} className="group relative flex h-full flex-1 items-end" title={`${m.name} ${year}: ${euro(m.total)}`}>
+          <div key={m.name} className="group relative flex h-full flex-1 items-end" title={`${m.name} ${year}: ${den(m.total)}`}>
             <div
               className="w-full rounded-t bg-brand-600 transition group-hover:bg-brand-700"
               style={{ height: m.total ? `max(${(m.total / max) * 100}%, 3px)` : 0 }}

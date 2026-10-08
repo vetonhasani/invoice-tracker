@@ -6,7 +6,7 @@ import { Building2, ChevronRight, Ellipsis, MapPin, Package, Pencil, Plus, Trash
 import { Fab, PageHeader } from "@/components/page-header";
 import { Button, Card, Confirm, Empty, Field, Input, Menu, Modal, SearchBox, cn, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { euro } from "@/lib/format";
+import { den } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { sumEntries, useStore } from "@/lib/store";
 import type { Company } from "@/lib/types";
@@ -99,7 +99,7 @@ export default function CompaniesPage() {
                     </td>
                     <td className="px-5 py-3.5 text-muted">{c.phone || "—"}</td>
                     <td className="tabular px-5 py-3.5 text-right">{c.materialCount}</td>
-                    <td className="tabular px-5 py-3.5 text-right font-semibold">{euro(c.sold)}</td>
+                    <td className="tabular px-5 py-3.5 text-right font-semibold">{den(c.sold)}</td>
                     <td className="px-3 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <RowMenu onView={() => open(c)} onEdit={() => openEdit(c)} onDelete={() => setDeleting(c)} />
@@ -124,7 +124,7 @@ export default function CompaniesPage() {
                         {c.address && <><span className="mx-1">·</span><MapPin size={12} /> {c.address}</>}
                       </span>
                     </span>
-                    <span className="tabular font-semibold">{euro(c.sold)}</span>
+                    <span className="tabular font-semibold">{den(c.sold)}</span>
                   </button>
                   <RowMenu onView={() => open(c)} onEdit={() => openEdit(c)} onDelete={() => setDeleting(c)} />
                 </li>
