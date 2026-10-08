@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Ellipsis, MapPin, Package, Pencil, Phone, Plus, Printer, Trash2, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Calendar, Ellipsis, MapPin, Package, Pencil, Phone, Plus, Trash2, TrendingUp, Wallet } from "lucide-react";
 import { ClientForm } from "@/components/client-form";
 import { EntryForm } from "@/components/entry-form";
+import { ExportMenu } from "@/components/export-menu";
 import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat, cn, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { dateSq, den, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { entryTotal, sumEntries, useStore } from "@/lib/store";
+import type { ExportDoc } from "@/lib/export";
 import type { Entry } from "@/lib/types";
 
 export default function ClientPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +54,28 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
     setEntryOpen(true);
   };
 
+  // Exports what's on screen: current month filter + search
+  const exportDoc = (): ExportDoc => ({
+    fileName: `${client.name} - ${month === "all" ? t.common.all : monthLabel(month)}`,
+    title: client.name,
+    meta: [
+      [client.phone, client.address].filter(Boolean).join(" · "),
+      `${t.exports.period}: ${month === "all" ? t.common.all : monthLabel(month)}`,
+      `${t.exports.exportedOn}: ${dateSq(todayIso())}`,
+    ].filter(Boolean),
+    columns: [
+      { label: t.cols.material },
+      { label: t.companies.label },
+      { label: t.cols.date, kind: "date" },
+      { label: t.cols.qty, kind: "number" },
+      { label: t.cols.unit },
+      { label: t.cols.price, kind: "money" },
+      { label: t.cols.amount, kind: "money" },
+    ],
+    rows: rows.map((e) => [e.name, e.companyName ?? "", e.date, e.qty, unit(e.unit), e.price, entryTotal(e)]),
+    total: { label: t.common.total, value: sumEntries(rows) },
+  });
+
   return (
     <>
       <Link href="/clients" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
@@ -70,9 +94,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
         }
         actions={
           <>
-            <Button variant="secondary" onClick={() => window.print()}>
-              <Printer size={16} /> {t.client.print}
-            </Button>
+            <ExportMenu getDoc={exportDoc} />
             <Menu
               trigger={() => (
                 <Button variant="secondary" className="w-10 px-0" aria-label={t.common.more}>
@@ -94,7 +116,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
       {/* mobile quick actions */}
       <div className="-mt-2 mb-5 flex gap-2 sm:hidden">
         <Button variant="secondary" size="sm" onClick={() => setEditClient(true)}><Pencil size={14} /> {t.common.edit}</Button>
-        <Button variant="secondary" size="sm" onClick={() => window.print()}><Printer size={14} /> {t.client.print}</Button>
+        <ExportMenu getDoc={exportDoc} size="sm" />
         <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setDeleteClientOpen(true)}><Trash2 size={14} /> {t.common.delete}</Button>
       </div>
 

@@ -219,6 +219,18 @@ const sq = {
     entriesIn: (n: number) => `${n} materiale`,
   },
 
+  exports: {
+    button: "Eksporto",
+    print: "Printo",
+    pdf: "Ruaj si PDF",
+    csv: "Shkarko CSV",
+    excel: "Shkarko Excel",
+    period: "Periudha",
+    exportedOn: "Eksportuar më",
+    downloaded: "Skedari u shkarkua",
+    failed: "Eksportimi dështoi",
+  },
+
   settings: {
     title: "Profili",
     subtitle: "Të dhënat e llogarisë, fjalëkalimi dhe gjuha",
@@ -478,6 +490,18 @@ const en: Dict = {
     totalFor: (period) => `Total · ${period}`,
     byMonth: (year) => `By month · ${year}`,
     entriesIn: (n) => `${n} ${plural(n, "material", "materials")}`,
+  },
+
+  exports: {
+    button: "Export",
+    print: "Print",
+    pdf: "Save as PDF",
+    csv: "Download CSV",
+    excel: "Download Excel",
+    period: "Period",
+    exportedOn: "Exported on",
+    downloaded: "File downloaded",
+    failed: "Export failed",
   },
 
   settings: {
