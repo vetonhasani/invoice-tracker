@@ -22,7 +22,7 @@ export default function MaterialsRoute() {
 }
 
 function MaterialsPage() {
-  const { materials, companies, entries, addMaterial, updateMaterial, deleteMaterial } = useStore();
+  const { materials, companies, entries, stock, addMaterial, updateMaterial, deleteMaterial } = useStore();
   const { t, unit } = useT();
   const toast = useToast();
   const router = useRouter();
@@ -213,7 +213,7 @@ function MaterialsPage() {
           toast(t.materials.deleted);
         }}
         title={t.materials.deleteTitle}
-        text={t.materials.deleteText(deleting?.name ?? "")}
+        text={`${t.materials.deleteText(deleting?.name ?? "")}${stock.some((x) => x.materialId === deleting?.id) ? ` ${t.stock.deleteMaterialNote}` : ""}`}
       />
     </>
   );

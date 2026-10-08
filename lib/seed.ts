@@ -1,4 +1,4 @@
-import type { Client, Company, Entry, Material, PricePoint } from "./types";
+import type { Client, Company, Entry, Material, PricePoint, StockIn } from "./types";
 
 // Mock data — replaced by Turso later.
 
@@ -115,3 +115,32 @@ export const seedEntries: Entry[] = [
   e("c2", "m6", 40, "2024-10-09"),
   e("c2", "m9", 15, "2024-11-30"),
 ];
+
+/** Stock purchases (purchase cost per unit, Den) — prices go up and down between buys. */
+let s = 0;
+const buy = (materialId: string, qty: number, price: number, date: string): StockIn => ({
+  id: `s${++s}`,
+  materialId,
+  companyId: seedMaterials.find((m) => m.id === materialId)?.companyId,
+  qty,
+  price,
+  date,
+});
+
+export const seedStock: StockIn[] = [
+  buy("m8", 200, 210, "2025-09-01"),
+  buy("m8", 150, 225, "2026-03-15"),
+  buy("m8", 100, 205, "2026-08-20"),
+  buy("m1", 300, 320, "2026-06-01"),
+  buy("m1", 200, 335, "2026-09-01"),
+  buy("m3", 3000, 19, "2026-05-10"),
+  buy("m3", 2000, 21, "2026-09-05"),
+  buy("m5", 80, 450, "2026-07-01"),
+  buy("m6", 50, 700, "2026-08-01"),
+];
+
+// 2026 client entries of stocked materials were taken from stock
+for (const e of seedEntries) {
+  const first = seedStock.filter((x) => x.materialId === e.materialId).map((x) => x.date).sort()[0];
+  if (first && e.date >= first) e.fromStock = true;
+}

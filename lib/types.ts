@@ -46,6 +46,19 @@ export type Entry = {
   companyName?: string;
   qty: number;
   date: string; // YYYY-MM-DD
+  /** Taken from my stock — counts against the material's stock level. */
+  fromStock?: boolean;
+};
+
+/** A stock purchase: bought `qty` of a material at `price` per unit (purchase cost, not the catalog price). */
+export type StockIn = {
+  id: string;
+  materialId: string;
+  companyId?: string;
+  qty: number;
+  price: number;
+  date: string; // YYYY-MM-DD
+  note?: string;
 };
 
 export type User = { name: string; email: string };

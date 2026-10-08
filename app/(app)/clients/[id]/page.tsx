@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Ellipsis, MapPin, Package, Pencil, Phone, Plus, Trash2, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Boxes, Calendar, Ellipsis, MapPin, Package, Pencil, Phone, Plus, Trash2, TrendingUp, Wallet } from "lucide-react";
 import { ClientForm } from "@/components/client-form";
 import { EntryForm } from "@/components/entry-form";
 import { ExportMenu } from "@/components/export-menu";
@@ -174,7 +174,10 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                 {rows.map((e) => (
                   <tr key={e.id} className="border-b border-line hover:bg-slate-50/80">
                     <td className="px-5 py-3.5">
-                      <div className="font-medium">{e.name}</div>
+                      <div className="flex items-center gap-2 font-medium">
+                        {e.name}
+                        {e.fromStock && <StockBadge />}
+                      </div>
                       {e.companyName && <div className="text-xs text-muted">{e.companyName}</div>}
                     </td>
                     <td className="tabular px-5 py-3.5 text-muted">{dateSq(e.date)}</td>
@@ -206,7 +209,10 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                 <li key={e.id} className="flex items-center gap-2 py-3.5 pl-4 pr-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-3">
-                      <span className="truncate font-semibold">{e.name}</span>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate font-semibold">{e.name}</span>
+                        {e.fromStock && <StockBadge />}
+                      </span>
                       <span className="tabular font-semibold">{den(entryTotal(e))}</span>
                     </div>
                     <div className="tabular mt-0.5 flex justify-between gap-3 text-[13px] text-muted">
@@ -279,5 +285,15 @@ function EntryMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => v
         { label: t.common.delete, icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
       ]}
     />
+  );
+}
+
+function StockBadge() {
+  const { t } = useT();
+  return (
+    <span title={t.stock.fromStock} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
+      <Boxes size={11} />
+      <span className="hidden sm:inline">{t.stock.fromStock}</span>
+    </span>
   );
 }

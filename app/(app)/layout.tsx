@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ChevronDown, Languages, LogOut, Package, Settings, Users } from "lucide-react";
+import { Boxes, Building2, ChevronDown, Languages, LogOut, Package, Settings, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Avatar, Menu, cn } from "@/components/ui";
 import { LANGS, useT } from "@/lib/i18n";
@@ -19,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: "/clients", label: t.nav.clients, icon: Users },
     { href: "/materials", label: t.nav.materials, icon: Package },
     { href: "/companies", label: t.nav.companies, icon: Building2 },
+    { href: "/stock", label: t.nav.stock, icon: Boxes },
     { href: "/settings", label: t.nav.profile, icon: Settings },
   ];
   const current = LANGS.find((l) => l.id === lang)!;
@@ -44,12 +45,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh pb-24 sm:pb-0">
       <header className="sticky top-0 z-30 border-b border-line bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 lg:gap-8">
             <Link href="/clients">
               <Logo />
             </Link>
             <nav className="hidden items-center gap-1 sm:flex">
-              {NAV.slice(0, 3).map((n) => {
+              {NAV.slice(0, 4).map((n) => {
                 const on = path.startsWith(n.href);
                 return (
                   <Link
@@ -72,16 +73,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             trigger={(open) => (
               <button
                 className={cn(
-                  "flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1 transition hover:bg-slate-100 sm:pr-3",
+                  "flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1 transition hover:bg-slate-100 lg:pr-3",
                   open && "bg-slate-100"
                 )}
               >
                 <Avatar name={user.name} size={32} />
-                <span className="hidden text-left sm:block">
+                <span className="hidden text-left lg:block">
                   <span className="block text-sm font-semibold leading-tight">{user.name}</span>
                   <span className="block text-xs leading-tight text-muted">{user.email}</span>
                 </span>
-                <ChevronDown size={15} className="hidden text-muted sm:block" />
+                <ChevronDown size={15} className="hidden text-muted lg:block" />
               </button>
             )}
             items={[
@@ -108,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {NAV.map((n) => {
             const on = path.startsWith(n.href);
             return (

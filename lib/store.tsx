@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { Client, Company, Entry, Material, User } from "./types";
-import { seedClients, seedCompanies, seedEntries, seedMaterials } from "./seed";
+import type { Client, Company, Entry, Material, StockIn, User } from "./types";
+import { seedClients, seedCompanies, seedEntries, seedMaterials, seedStock } from "./seed";
 import { todayIso, uid } from "./format";
 
 /**
@@ -11,7 +11,14 @@ import { todayIso, uid } from "./format";
  * server actions / Turso queries later — the pages won't need to change.
  */
 
-type State = { user: User | null; clients: Client[]; companies: Company[]; materials: Material[]; entries: Entry[] };
+type State = {
+  user: User | null;
+  clients: Client[];
+  companies: Company[];
+  materials: Material[];
+  entries: Entry[];
+  stock: StockIn[];
+};
 
 type Store = State & {
   ready: boolean;
@@ -35,6 +42,10 @@ type Store = State & {
   addEntry: (e: Omit<Entry, "id">) => void;
   updateEntry: (id: string, e: Partial<Entry>) => void;
   deleteEntry: (id: string) => void;
+  // stock purchases — stock level is computed (bought − used from stock), see stockOf()
+  addStock: (s: Omit<StockIn, "id">) => void;
+  updateStock: (id: string, s: Partial<StockIn>) => void;
+  deleteStock: (id: string) => void;
   resetDemo: () => void;
 };
 
@@ -45,6 +56,7 @@ const initial: State = {
   companies: seedCompanies,
   materials: seedMaterials,
   entries: seedEntries,
+  stock: seedStock,
 };
 
 const nowIso = () => new Date().toISOString();
@@ -124,6 +136,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ...s,
           companies: s.companies.filter((x) => x.id !== id),
           materials: s.materials.map((m) => (m.companyId === id ? { ...m, companyId: undefined } : m)),
+          stock: s.stock.map((x) => (x.companyId === id ? { ...x, companyId: undefined } : x)),
         })),
 
       addMaterial: (m, date) => {
@@ -144,12 +157,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             };
           }),
         })),
-      deleteMaterial: (id) => set((s) => ({ ...s, materials: s.materials.filter((x) => x.id !== id) })),
+      // Its stock purchases go with it; client entries keep their snapshot.
+      deleteMaterial: (id) =>
+        set((s) => ({ ...s, materials: s.materials.filter((x) => x.id !== id), stock: s.stock.filter((x) => x.materialId !== id) })),
 
       addEntry: (e) => set((s) => ({ ...s, entries: [{ ...e, id: uid() }, ...s.entries] })),
       updateEntry: (id, e) =>
         set((s) => ({ ...s, entries: s.entries.map((x) => (x.id === id ? { ...x, ...e } : x)) })),
       deleteEntry: (id) => set((s) => ({ ...s, entries: s.entries.filter((x) => x.id !== id) })),
+
+      addStock: (x) => set((s) => ({ ...s, stock: [...s.stock, { ...x, id: uid() }] })),
+      updateStock: (id, x) => set((s) => ({ ...s, stock: s.stock.map((y) => (y.id === id ? { ...y, ...x } : y)) })),
+      deleteStock: (id) => set((s) => ({ ...s, stock: s.stock.filter((y) => y.id !== id) })),
 
       resetDemo: () => set((s) => ({ ...initial, user: s.user })),
     }),
@@ -173,3 +192,20 @@ function nameFromEmail(email: string) {
 /** Helpers shared by pages */
 export const entryTotal = (e: Entry) => e.qty * e.price;
 export const sumEntries = (list: Entry[]) => list.reduce((t, e) => t + entryTotal(e), 0);
+
+/**
+ * Stock level of one material: everything bought minus what clients took from stock.
+ * Costs use the weighted average purchase price.
+ */
+export function stockOf(materialId: string, stock: StockIn[], entries: Entry[]) {
+  const buys = stock.filter((x) => x.materialId === materialId).sort((a, b) => a.date.localeCompare(b.date));
+  const bought = buys.reduce((t, x) => t + x.qty, 0);
+  const used = entries.filter((e) => e.fromStock && e.materialId === materialId).reduce((t, e) => t + e.qty, 0);
+  const spent = buys.reduce((t, x) => t + x.qty * x.price, 0);
+  const avgCost = bought ? spent / bought : 0;
+  const left = round(bought - used);
+  return { buys, bought, used, left, spent, avgCost, value: Math.max(left, 0) * avgCost, tracked: buys.length > 0 };
+}
+
+/** Avoids 0.30000000000000004-style leftovers in quantities. */
+const round = (n: number) => Math.round(n * 1000) / 1000;

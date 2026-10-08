@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Package, Plus, RotateCcw, Sparkles } from "lucide-react";
+import { Boxes, Check, ChevronDown, Package, Plus, RotateCcw, Sparkles } from "lucide-react";
 import { Avatar, Button, Field, Input, Modal, cn, inputCls } from "./ui";
 import { UNITS, den, todayIso } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { useStore } from "@/lib/store";
+import { stockOf, useStore } from "@/lib/store";
 import type { Client, Entry, Material } from "@/lib/types";
 
 /**
@@ -25,9 +25,10 @@ export function EntryForm({
   initial?: Entry | null;
   onSaved: (msg: string) => void;
 }) {
-  const { materials, companies, addMaterial, addEntry, updateEntry } = useStore();
+  const { materials, companies, stock, entries, addMaterial, addEntry, updateEntry } = useStore();
   const { t, unit: unitLabel } = useT();
 
+  const [fromStock, setFromStock] = useState(false);
   const [companyId, setCompanyId] = useState(""); // "" = all companies
   const [material, setMaterial] = useState<Material | null>(null);
   const [newMat, setNewMat] = useState<{ name: string; unit: string } | null>(null);
@@ -55,7 +56,9 @@ export function EntryForm({
       setQty(String(initial.qty));
       setPrice(initial.price.toFixed(2));
       setDate(initial.date);
+      setFromStock(!!initial.fromStock);
     } else {
+      setFromStock(false);
       setMaterial(null);
       setCompanyId("");
       setQty("");
@@ -70,6 +73,7 @@ export function EntryForm({
     if (m.companyId) setCompanyId(m.companyId);
     setNewMat(null);
     setPrice(m.price.toFixed(2));
+    setFromStock(stockOf(m.id, stock, entries).left > 0); // default on when there's stock
     setErrors({});
     setTimeout(() => qtyRef.current?.focus(), 30);
   };
@@ -81,6 +85,13 @@ export function EntryForm({
   const isAuto = catalogPrice !== undefined && priceN === catalogPrice;
   const unit = newMat?.unit ?? material?.unit;
   const shown = companyId ? materials.filter((m) => m.companyId === companyId) : materials;
+
+  // Stock of the picked material; when editing an entry already taken from stock, its own qty is available again
+  const st = material && !newMat ? stockOf(material.id, stock, entries) : null;
+  const available = st
+    ? st.left + (initial?.fromStock && initial.materialId === material?.id ? initial.qty : 0)
+    : 0;
+  const availableLabel = `${available.toLocaleString("en-US", { maximumFractionDigits: 3 })} ${unitLabel(unit ?? "")}`;
 
   const changeCompany = (id: string) => {
     setCompanyId(id);
@@ -95,6 +106,7 @@ export function EntryForm({
     if (!material && !newMat?.name.trim()) err.material = t.entryForm.pickMaterial;
     if (!(qtyN > 0)) err.qty = t.entryForm.enterQty;
     if (!(priceN >= 0) || price === "") err.price = t.entryForm.enterPrice;
+    if (fromStock && st?.tracked && qtyN > available) err.qty = t.stock.notEnough(availableLabel);
     setErrors(err);
     if (Object.keys(err).length) return;
 
@@ -112,6 +124,7 @@ export function EntryForm({
       companyName: company?.name,
       qty: qtyN,
       date,
+      fromStock: fromStock && !!st?.tracked,
     };
     if (initial) {
       updateEntry(initial.id, data);
@@ -177,6 +190,27 @@ export function EntryForm({
             }}
           />
         </Field>
+
+        {st?.tracked && (
+          <label
+            className={cn(
+              "flex cursor-pointer select-none items-center gap-3 rounded-xl border px-3.5 py-3 transition",
+              fromStock ? "border-brand-200 bg-brand-50/60" : "border-line"
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={fromStock}
+              onChange={(e) => setFromStock(e.target.checked)}
+              className="h-4 w-4 rounded accent-brand-600"
+            />
+            <Boxes size={16} className="text-brand-600" />
+            <span className="flex-1 text-sm font-semibold">{t.stock.takeFromStock}</span>
+            <span className={cn("tabular text-sm", available > 0 ? "text-muted" : "font-semibold text-rose-700")}>
+              {t.stock.available(availableLabel)}
+            </span>
+          </label>
+        )}
 
         {newMat && (
           <div className="animate-pop-in rounded-xl border border-dashed border-brand-200 bg-brand-50/50 p-3.5">

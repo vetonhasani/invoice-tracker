@@ -136,7 +136,7 @@ function Mini({ label, value, strong }: { label: string; value: string; strong?:
  * Step line: a price holds until the next change, and the last one runs to today.
  * Each change has a hover target with a native tooltip; the list below is the table view.
  */
-function StepChart({ points }: { points: PricePoint[] }) {
+export function StepChart({ points }: { points: PricePoint[] }) {
   const W = 400;
   const H = 120;
   const pad = { l: 44, r: 8, t: 10, b: 20 };
