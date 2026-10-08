@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { initials } from "@/lib/format";
+import { LANGS, useT } from "@/lib/i18n";
 
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -153,6 +154,7 @@ export function Modal({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
+  const { t } = useT();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -183,7 +185,7 @@ export function Modal({
           <button
             onClick={onClose}
             className="-mr-1.5 -mt-1 grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-slate-100 hover:text-ink"
-            aria-label="Mbyll"
+            aria-label={t.common.close}
           >
             <X size={18} />
           </button>
@@ -206,7 +208,7 @@ export function Confirm({
   onConfirm,
   title,
   text,
-  confirmLabel = "Fshij",
+  confirmLabel,
 }: {
   open: boolean;
   onClose: () => void;
@@ -215,6 +217,7 @@ export function Confirm({
   text: string;
   confirmLabel?: string;
 }) {
+  const { t } = useT();
   return (
     <Modal
       open={open}
@@ -223,7 +226,7 @@ export function Confirm({
       footer={
         <>
           <Button variant="secondary" size="lg" className="sm:h-10 sm:text-sm" onClick={onClose}>
-            Anulo
+            {t.common.cancel}
           </Button>
           <Button
             variant="danger"
@@ -234,7 +237,7 @@ export function Confirm({
               onClose();
             }}
           >
-            {confirmLabel}
+            {confirmLabel ?? t.common.delete}
           </Button>
         </>
       }
@@ -251,7 +254,7 @@ export function Menu({
   align = "right",
 }: {
   trigger: (open: boolean) => React.ReactNode;
-  items: { label: string; icon?: React.ReactNode; onClick: () => void; danger?: boolean }[];
+  items: { label: string; icon?: React.ReactNode; right?: React.ReactNode; onClick: () => void; danger?: boolean }[];
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
@@ -296,6 +299,7 @@ export function Menu({
             >
               {it.icon}
               {it.label}
+              {it.right && <span className="ml-auto pl-3">{it.right}</span>}
             </button>
           ))}
         </div>
@@ -359,6 +363,31 @@ export function SearchBox({
         placeholder={placeholder}
         className={cn(inputCls, "h-10 pl-10 shadow-none")}
       />
+    </div>
+  );
+}
+
+/* ---------- Language switch (AL / EN) ---------- */
+export function LangSwitch({ className }: { className?: string }) {
+  const { lang, setLang, t } = useT();
+  return (
+    <div role="radiogroup" aria-label={t.lang.label} className={cn("inline-flex rounded-xl border border-line bg-slate-100 p-1", className)}>
+      {LANGS.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          role="radio"
+          aria-checked={lang === l.id}
+          title={l.name}
+          onClick={() => setLang(l.id)}
+          className={cn(
+            "h-8 rounded-lg px-3 text-sm font-semibold transition",
+            lang === l.id ? "bg-white text-ink shadow-card" : "text-muted hover:text-ink"
+          )}
+        >
+          {l.short}
+        </button>
+      ))}
     </div>
   );
 }

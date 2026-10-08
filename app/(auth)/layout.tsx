@@ -3,10 +3,13 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { LangSwitch } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, ready } = useStore();
+  const { t } = useT();
   const router = useRouter();
   const path = usePathname();
 
@@ -31,11 +34,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Logo light className="relative text-lg" />
         <div className="relative my-auto max-w-md">
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight xl:text-[44px]">
-            Materialet e çdo klienti, në një vend.
+            {t.auth.headline}
           </h1>
-          <p className="mt-4 text-lg text-brand-100">
-            Zgjidh materialin, shkruaj sasinë, çmimi llogaritet vetë. Pa formula, pa Excel.
-          </p>
+          <p className="mt-4 text-lg text-brand-100">{t.auth.tagline}</p>
 
           {/* Preview card */}
           <div className="mt-10 rotate-[-1.5deg] rounded-2xl bg-white p-5 text-ink shadow-2xl shadow-brand-900/40">
@@ -44,11 +45,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">AK</span>
                 <div>
                   <div className="font-semibold">Arben Krasniqi</div>
-                  <div className="text-xs text-muted">6 materiale</div>
+                  <div className="text-xs text-muted">{t.common.materialsCount(6)}</div>
                 </div>
               </div>
               <div className="tabular text-right">
-                <div className="text-xs text-muted">Totali</div>
+                <div className="text-xs text-muted">{t.clients.colTotal}</div>
                 <div className="font-bold">€1,747.00</div>
               </div>
             </div>
@@ -72,7 +73,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Form side */}
       <main className="flex flex-col px-5 py-8 sm:px-10">
-        <Logo className="lg:hidden" />
+        <div className="flex items-center justify-between lg:justify-end">
+          <Logo className="lg:hidden" />
+          <LangSwitch />
+        </div>
         <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-start pt-14 pb-10 sm:justify-center sm:py-10">{children}</div>
       </main>
     </div>

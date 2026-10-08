@@ -9,11 +9,13 @@ import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { dateSq, euro } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { sumEntries, useStore } from "@/lib/store";
 import type { Client } from "@/lib/types";
 
 export default function ClientsPage() {
   const { clients, entries, addClient, updateClient, deleteClient } = useStore();
+  const { t } = useT();
   const toast = useToast();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -42,32 +44,32 @@ export default function ClientsPage() {
   return (
     <>
       <PageHeader
-        title="Klientët"
-        subtitle="Zgjidh një klient për të parë materialet"
+        title={t.clients.title}
+        subtitle={t.clients.subtitle}
         actions={
           <Button onClick={openNew}>
-            <Plus size={17} /> Shto klient
+            <Plus size={17} /> {t.clients.add}
           </Button>
         }
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Stat accent className="col-span-2 sm:col-span-1" label="Totali i të gjithë klientëve" value={euro(grand)} icon={<Wallet size={15} />} />
-        <Stat label="Klientë" value={clients.length} icon={<Users size={15} />} />
-        <Stat label="Materiale të shtuara" value={entries.length} icon={<Package size={15} />} />
+        <Stat accent className="col-span-2 sm:col-span-1" label={t.clients.statTotal} value={euro(grand)} icon={<Wallet size={15} />} />
+        <Stat label={t.clients.statClients} value={clients.length} icon={<Users size={15} />} />
+        <Stat label={t.clients.statEntries} value={entries.length} icon={<Package size={15} />} />
       </div>
 
       <Card className="overflow-hidden">
         <div className="border-b border-line p-3">
-          <SearchBox value={q} onChange={setQ} placeholder="Kërko klient, telefon ose qytet…" />
+          <SearchBox value={q} onChange={setQ} placeholder={t.clients.search} />
         </div>
 
         {rows.length === 0 ? (
           <Empty
             icon={<Users size={24} />}
-            title={q ? "Asnjë klient nuk u gjet" : "Ende nuk ke klientë"}
-            text={q ? "Provo një emër tjetër." : "Shto klientin e parë për të filluar."}
-            action={!q && <Button onClick={openNew}><Plus size={17} /> Shto klient</Button>}
+            title={q ? t.clients.notFound : t.clients.empty}
+            text={q ? t.common.tryAnotherName : t.clients.emptyText}
+            action={!q && <Button onClick={openNew}><Plus size={17} /> {t.clients.add}</Button>}
           />
         ) : (
           <>
@@ -75,11 +77,11 @@ export default function ClientsPage() {
             <table className="hidden w-full text-sm sm:table">
               <thead>
                 <tr className="border-b border-line bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-5 py-3">Klienti</th>
-                  <th className="px-5 py-3">Telefoni</th>
-                  <th className="px-5 py-3 text-right">Materiale</th>
-                  <th className="px-5 py-3">E fundit</th>
-                  <th className="px-5 py-3 text-right">Totali</th>
+                  <th className="px-5 py-3">{t.clients.colClient}</th>
+                  <th className="px-5 py-3">{t.clients.colPhone}</th>
+                  <th className="px-5 py-3 text-right">{t.clients.colMaterials}</th>
+                  <th className="px-5 py-3">{t.clients.colLast}</th>
+                  <th className="px-5 py-3 text-right">{t.clients.colTotal}</th>
                   <th className="w-24 px-3 py-3" />
                 </tr>
               </thead>
@@ -123,7 +125,7 @@ export default function ClientsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-semibold">{c.name}</div>
                       <div className="truncate text-[13px] text-muted">
-                        {c.count} materiale{c.last && ` · ${dateSq(c.last)}`}
+                        {t.common.materialsCount(c.count)}{c.last && ` · ${dateSq(c.last)}`}
                       </div>
                     </div>
                     <div className="tabular text-right font-semibold">{euro(c.total)}</div>
@@ -137,7 +139,7 @@ export default function ClientsPage() {
       </Card>
 
       <Fab onClick={openNew}>
-        <Plus size={20} /> Klient
+        <Plus size={20} /> {t.clients.fab}
       </Fab>
 
       <ClientForm
@@ -147,10 +149,10 @@ export default function ClientsPage() {
         onSave={(v) => {
           if (editing) {
             updateClient(editing.id, v);
-            toast("Klienti u përditësua");
+            toast(t.clients.updated);
           } else {
             const c = addClient(v);
-            toast("Klienti u shtua");
+            toast(t.clients.added);
             router.push(`/clients/${c.id}`);
           }
         }}
@@ -160,26 +162,27 @@ export default function ClientsPage() {
         onClose={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) deleteClient(deleting.id);
-          toast("Klienti u fshi");
+          toast(t.clients.deleted);
         }}
-        title="Fshij klientin?"
-        text={`"${deleting?.name}" dhe të gjitha materialet e tij do të fshihen. Ky veprim nuk kthehet mbrapsht.`}
+        title={t.clients.deleteTitle}
+        text={t.clients.deleteText(deleting?.name ?? "")}
       />
     </>
   );
 }
 
 function RowMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const { t } = useT();
   return (
     <Menu
       trigger={() => (
-        <button className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label="Veprime">
+        <button className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label={t.common.actions}>
           <Ellipsis size={18} />
         </button>
       )}
       items={[
-        { label: "Ndrysho", icon: <Pencil size={15} />, onClick: onEdit },
-        { label: "Fshij", icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
+        { label: t.common.edit, icon: <Pencil size={15} />, onClick: onEdit },
+        { label: t.common.delete, icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
       ]}
     />
   );

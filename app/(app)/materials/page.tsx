@@ -6,11 +6,13 @@ import { Fab, PageHeader } from "@/components/page-header";
 import { Button, Card, Confirm, Empty, Field, Input, Menu, Modal, SearchBox, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { UNITS, euro } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import type { Material } from "@/lib/types";
 
 export default function MaterialsPage() {
   const { materials, entries, addMaterial, updateMaterial, deleteMaterial } = useStore();
+  const { t, unit } = useT();
   const toast = useToast();
   const [q, setQ] = useState("");
   const [formOpen, setFormOpen] = useState(false);
@@ -38,37 +40,37 @@ export default function MaterialsPage() {
   return (
     <>
       <PageHeader
-        title="Materialet"
-        subtitle="Katalogu: shto materialin një herë me çmimin, pastaj vetëm zgjidhe te klienti"
+        title={t.materials.title}
+        subtitle={t.materials.subtitle}
         actions={
           <Button onClick={openNew}>
-            <Plus size={17} /> Shto në katalog
+            <Plus size={17} /> {t.materials.add}
           </Button>
         }
       />
 
       <Card className="overflow-hidden">
         <div className="flex items-center gap-3 border-b border-line p-3">
-          <SearchBox value={q} onChange={setQ} placeholder="Kërko material…" className="flex-1" />
-          <span className="hidden pr-2 text-sm text-muted sm:block">{materials.length} materiale</span>
+          <SearchBox value={q} onChange={setQ} placeholder={t.common.searchMaterial} className="flex-1" />
+          <span className="hidden pr-2 text-sm text-muted sm:block">{t.common.materialsCount(materials.length)}</span>
         </div>
 
         {rows.length === 0 ? (
           <Empty
             icon={<Package size={24} />}
-            title={q ? "Asnjë material nuk u gjet" : "Katalogu është bosh"}
-            text={q ? "Provo një emër tjetër." : "Shto materialet që përdor më shpesh me çmimet e tyre."}
-            action={!q && <Button onClick={openNew}><Plus size={17} /> Shto në katalog</Button>}
+            title={q ? t.materials.notFound : t.materials.empty}
+            text={q ? t.common.tryAnotherName : t.materials.emptyText}
+            action={!q && <Button onClick={openNew}><Plus size={17} /> {t.materials.add}</Button>}
           />
         ) : (
           <>
             <table className="hidden w-full text-sm sm:table">
               <thead>
                 <tr className="border-b border-line bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-5 py-3">Materiali</th>
-                  <th className="px-5 py-3">Njësia</th>
-                  <th className="px-5 py-3 text-right">Vlera</th>
-                  <th className="px-5 py-3 text-right">Përdorur</th>
+                  <th className="px-5 py-3">{t.cols.material}</th>
+                  <th className="px-5 py-3">{t.cols.unit}</th>
+                  <th className="px-5 py-3 text-right">{t.cols.price}</th>
+                  <th className="px-5 py-3 text-right">{t.materials.colUsed}</th>
                   <th className="w-14 px-3 py-3" />
                 </tr>
               </thead>
@@ -84,7 +86,7 @@ export default function MaterialsPage() {
                       </button>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{m.unit}</span>
+                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{unit(m.unit)}</span>
                     </td>
                     <td className="tabular px-5 py-3 text-right font-semibold">{euro(m.price)}</td>
                     <td className="tabular px-5 py-3 text-right text-muted">{m.used}×</td>
@@ -105,7 +107,7 @@ export default function MaterialsPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold">{m.name}</span>
-                      <span className="text-[13px] text-muted">për {m.unit} · {m.used}× përdorur</span>
+                      <span className="text-[13px] text-muted">{t.materials.perUnit(unit(m.unit), m.used)}</span>
                     </span>
                     <span className="tabular font-semibold">{euro(m.price)}</span>
                   </button>
@@ -117,12 +119,10 @@ export default function MaterialsPage() {
         )}
       </Card>
 
-      <p className="mt-4 px-1 text-xs text-muted">
-        Ndryshimi i çmimit vlen vetëm për materialet që shtohen pas ndryshimit. Materialet e vjetra te klientët e mbajnë çmimin e tyre.
-      </p>
+      <p className="mt-4 px-1 text-xs text-muted">{t.materials.priceNote}</p>
 
       <Fab onClick={openNew}>
-        <Plus size={20} /> Në katalog
+        <Plus size={20} /> {t.materials.fab}
       </Fab>
 
       <MaterialForm
@@ -132,10 +132,10 @@ export default function MaterialsPage() {
         onSave={(v) => {
           if (editing) {
             updateMaterial(editing.id, v);
-            toast("Materiali u përditësua");
+            toast(t.materials.updated);
           } else {
             addMaterial(v);
-            toast("Materiali u shtua në katalog");
+            toast(t.materials.added);
           }
         }}
       />
@@ -144,10 +144,10 @@ export default function MaterialsPage() {
         onClose={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) deleteMaterial(deleting.id);
-          toast("Materiali u fshi nga katalogu");
+          toast(t.materials.deleted);
         }}
-        title="Fshij nga katalogu?"
-        text={`"${deleting?.name}" nuk do të shfaqet më për zgjedhje. Materialet e shtuara më parë te klientët mbeten.`}
+        title={t.materials.deleteTitle}
+        text={t.materials.deleteText(deleting?.name ?? "")}
       />
     </>
   );
@@ -164,6 +164,7 @@ function MaterialForm({
   initial: Material | null;
   onSave: (v: Omit<Material, "id">) => void;
 }) {
+  const { t, unit: unitLabel } = useT();
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("copë");
   const [price, setPrice] = useState("");
@@ -180,8 +181,8 @@ function MaterialForm({
   const save = () => {
     const p = parseFloat(price.replace(",", "."));
     const e: Record<string, string> = {};
-    if (!name.trim()) e.name = "Shkruaj emrin e materialit.";
-    if (!(p >= 0) || price === "") e.price = "Shkruaj vlerën.";
+    if (!name.trim()) e.name = t.materials.nameRequired;
+    if (!(p >= 0) || price === "") e.price = t.entryForm.enterPrice;
     setErr(e);
     if (Object.keys(e).length) return;
     onSave({ name: name.trim(), unit, price: p });
@@ -192,12 +193,12 @@ function MaterialForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? "Ndrysho materialin" : "Shto në katalog"}
-      description="Ky çmim plotësohet automatikisht te klientët"
+      title={initial ? t.materials.editTitle : t.materials.add}
+      description={t.materials.formDescription}
       footer={
         <>
-          <Button variant="secondary" size="lg" className="sm:h-10 sm:text-sm" onClick={onClose}>Anulo</Button>
-          <Button size="lg" className="sm:h-10 sm:text-sm" onClick={save}>{initial ? "Ruaj ndryshimet" : "Ruaj materialin"}</Button>
+          <Button variant="secondary" size="lg" className="sm:h-10 sm:text-sm" onClick={onClose}>{t.common.cancel}</Button>
+          <Button size="lg" className="sm:h-10 sm:text-sm" onClick={save}>{initial ? t.common.saveChanges : t.materials.save}</Button>
         </>
       }
     >
@@ -208,16 +209,16 @@ function MaterialForm({
           save();
         }}
       >
-        <Field label="Emri i materialit *" error={err.name}>
-          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="p.sh. Çimento 25kg" />
+        <Field label={t.materials.name} error={err.name}>
+          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t.materials.namePh} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Njësia">
+          <Field label={t.cols.unit}>
             <select value={unit} onChange={(e) => setUnit(e.target.value)} className={inputCls}>
-              {UNITS.map((u) => <option key={u}>{u}</option>)}
+              {UNITS.map((u) => <option key={u} value={u}>{unitLabel(u)}</option>)}
             </select>
           </Field>
-          <Field label="Vlera (€) *" error={err.price}>
+          <Field label={t.materials.price} error={err.price}>
             <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
           </Field>
         </div>
@@ -228,16 +229,17 @@ function MaterialForm({
 }
 
 function RowMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const { t } = useT();
   return (
     <Menu
       trigger={() => (
-        <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label="Veprime">
+        <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label={t.common.actions}>
           <Ellipsis size={18} />
         </button>
       )}
       items={[
-        { label: "Ndrysho", icon: <Pencil size={15} />, onClick: onEdit },
-        { label: "Fshij", icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
+        { label: t.common.edit, icon: <Pencil size={15} />, onClick: onEdit },
+        { label: t.common.delete, icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
       ]}
     />
   );

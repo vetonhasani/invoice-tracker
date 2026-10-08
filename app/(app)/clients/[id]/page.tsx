@@ -9,13 +9,15 @@ import { EntryForm } from "@/components/entry-form";
 import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat, cn, inputCls } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { dateSq, euro, monthLabel, todayIso } from "@/lib/format";
+import { dateSq, euro, todayIso } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { entryTotal, sumEntries, useStore } from "@/lib/store";
 import type { Entry } from "@/lib/types";
 
 export default function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { clients, entries, updateClient, deleteClient, deleteEntry } = useStore();
+  const { t, unit, monthLabel } = useT();
   const toast = useToast();
   const router = useRouter();
 
@@ -38,9 +40,9 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
       <Card>
         <Empty
           icon={<Package size={24} />}
-          title="Klienti nuk u gjet"
-          text="Mund të jetë fshirë."
-          action={<Link href="/clients"><Button variant="secondary">Kthehu te klientët</Button></Link>}
+          title={t.client.notFound}
+          text={t.client.notFoundText}
+          action={<Link href="/clients"><Button variant="secondary">{t.client.back}</Button></Link>}
         />
       </Card>
     );
@@ -53,7 +55,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
   return (
     <>
       <Link href="/clients" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
-        <ArrowLeft size={16} /> Klientët
+        <ArrowLeft size={16} /> {t.nav.clients}
       </Link>
 
       <PageHeader
@@ -63,27 +65,27 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
           <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             {client.phone && <span className="flex items-center gap-1.5"><Phone size={14} />{client.phone}</span>}
             {client.address && <span className="flex items-center gap-1.5"><MapPin size={14} />{client.address}</span>}
-            {!client.phone && !client.address && <span>Pa të dhëna kontakti</span>}
+            {!client.phone && !client.address && <span>{t.client.noContact}</span>}
           </span>
         }
         actions={
           <>
             <Button variant="secondary" onClick={() => window.print()}>
-              <Printer size={16} /> Printo
+              <Printer size={16} /> {t.client.print}
             </Button>
             <Menu
               trigger={() => (
-                <Button variant="secondary" className="w-10 px-0" aria-label="Më shumë">
+                <Button variant="secondary" className="w-10 px-0" aria-label={t.common.more}>
                   <Ellipsis size={18} />
                 </Button>
               )}
               items={[
-                { label: "Ndrysho klientin", icon: <Pencil size={15} />, onClick: () => setEditClient(true) },
-                { label: "Fshij klientin", icon: <Trash2 size={15} />, onClick: () => setDeleteClientOpen(true), danger: true },
+                { label: t.client.edit, icon: <Pencil size={15} />, onClick: () => setEditClient(true) },
+                { label: t.client.delete, icon: <Trash2 size={15} />, onClick: () => setDeleteClientOpen(true), danger: true },
               ]}
             />
             <Button onClick={openNew}>
-              <Plus size={17} /> Shto material
+              <Plus size={17} /> {t.client.addMaterial}
             </Button>
           </>
         }
@@ -91,9 +93,9 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
 
       {/* mobile quick actions */}
       <div className="-mt-2 mb-5 flex gap-2 sm:hidden">
-        <Button variant="secondary" size="sm" onClick={() => setEditClient(true)}><Pencil size={14} /> Ndrysho</Button>
-        <Button variant="secondary" size="sm" onClick={() => window.print()}><Printer size={14} /> Printo</Button>
-        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setDeleteClientOpen(true)}><Trash2 size={14} /> Fshij</Button>
+        <Button variant="secondary" size="sm" onClick={() => setEditClient(true)}><Pencil size={14} /> {t.common.edit}</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.print()}><Printer size={14} /> {t.client.print}</Button>
+        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setDeleteClientOpen(true)}><Trash2 size={14} /> {t.common.delete}</Button>
       </div>
 
       {client.note && (
@@ -101,14 +103,14 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Stat accent className="col-span-2 sm:col-span-1" label="Totali" value={euro(sumEntries(mine))} icon={<Wallet size={15} />} />
-        <Stat label="Artikuj" value={mine.length} icon={<Package size={15} />} />
-        <Stat label="Këtë muaj" value={euro(thisMonth)} icon={<TrendingUp size={15} />} />
+        <Stat accent className="col-span-2 sm:col-span-1" label={t.client.statTotal} value={euro(sumEntries(mine))} icon={<Wallet size={15} />} />
+        <Stat label={t.client.statItems} value={mine.length} icon={<Package size={15} />} />
+        <Stat label={t.client.statMonth} value={euro(thisMonth)} icon={<TrendingUp size={15} />} />
       </div>
 
       <Card className="overflow-hidden">
         <div className="flex gap-2 border-b border-line p-3">
-          <SearchBox value={q} onChange={setQ} placeholder="Kërko material…" className="flex-1" />
+          <SearchBox value={q} onChange={setQ} placeholder={t.common.searchMaterial} className="flex-1" />
           <div className="relative">
             <Calendar size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
@@ -116,7 +118,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
               onChange={(e) => setMonth(e.target.value)}
               className={cn(inputCls, "h-10 w-auto cursor-pointer appearance-none pl-9 pr-8 text-sm font-semibold shadow-none")}
             >
-              <option value="all">Të gjitha</option>
+              <option value="all">{t.common.all}</option>
               {months.map((m) => (
                 <option key={m} value={m}>{monthLabel(m)}</option>
               ))}
@@ -128,9 +130,9 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
         {rows.length === 0 ? (
           <Empty
             icon={<Package size={24} />}
-            title={mine.length ? "Asnjë rezultat" : "Ende pa materiale"}
-            text={mine.length ? "Ndrysho kërkimin ose muajin." : "Shto materialin e parë për këtë klient."}
-            action={!mine.length && <Button onClick={openNew}><Plus size={17} /> Shto material</Button>}
+            title={mine.length ? t.client.noResults : t.client.empty}
+            text={mine.length ? t.client.noResultsText : t.client.emptyText}
+            action={!mine.length && <Button onClick={openNew}><Plus size={17} /> {t.client.addMaterial}</Button>}
           />
         ) : (
           <>
@@ -138,11 +140,11 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
             <table className="hidden w-full text-sm sm:table">
               <thead>
                 <tr className="border-b border-line bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-5 py-3">Materiali</th>
-                  <th className="px-5 py-3">Data</th>
-                  <th className="px-5 py-3 text-right">Sasia</th>
-                  <th className="px-5 py-3 text-right">Vlera</th>
-                  <th className="px-5 py-3 text-right">Çmimi</th>
+                  <th className="px-5 py-3">{t.cols.material}</th>
+                  <th className="px-5 py-3">{t.cols.date}</th>
+                  <th className="px-5 py-3 text-right">{t.cols.qty}</th>
+                  <th className="px-5 py-3 text-right">{t.cols.price}</th>
+                  <th className="px-5 py-3 text-right">{t.cols.amount}</th>
                   <th className="w-14 px-3 py-3" />
                 </tr>
               </thead>
@@ -152,7 +154,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                     <td className="px-5 py-3.5 font-medium">{e.name}</td>
                     <td className="tabular px-5 py-3.5 text-muted">{dateSq(e.date)}</td>
                     <td className="tabular px-5 py-3.5 text-right">
-                      {e.qty} <span className="text-xs text-muted">{e.unit}</span>
+                      {e.qty} <span className="text-xs text-muted">{unit(e.unit)}</span>
                     </td>
                     <td className="tabular px-5 py-3.5 text-right text-muted">{euro(e.price)}</td>
                     <td className="tabular px-5 py-3.5 text-right font-semibold">{euro(entryTotal(e))}</td>
@@ -165,7 +167,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
               <tfoot>
                 <tr className="bg-slate-50/70">
                   <td className="px-5 py-4 font-bold" colSpan={4}>
-                    Total {month !== "all" && <span className="font-medium text-muted">· {monthLabel(month)}</span>}
+                    {t.common.total} {month !== "all" && <span className="font-medium text-muted">· {monthLabel(month)}</span>}
                   </td>
                   <td className="tabular px-5 py-4 text-right text-base font-bold">{euro(sumEntries(rows))}</td>
                   <td />
@@ -184,14 +186,14 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                     </div>
                     <div className="tabular mt-0.5 flex justify-between gap-3 text-[13px] text-muted">
                       <span>{dateSq(e.date)}</span>
-                      <span>{e.qty} {e.unit} × {euro(e.price)}</span>
+                      <span>{e.qty} {unit(e.unit)} × {euro(e.price)}</span>
                     </div>
                   </div>
                   <EntryMenu onEdit={() => { setEditingEntry(e); setEntryOpen(true); }} onDelete={() => setDeletingEntry(e)} />
                 </li>
               ))}
               <li className="flex justify-between bg-slate-50/70 px-4 py-4 font-bold">
-                <span>Total</span>
+                <span>{t.common.total}</span>
                 <span className="tabular">{euro(sumEntries(rows))}</span>
               </li>
             </ul>
@@ -200,7 +202,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
       </Card>
 
       <Fab onClick={openNew}>
-        <Plus size={20} /> Material
+        <Plus size={20} /> {t.client.fab}
       </Fab>
 
       <EntryForm open={entryOpen} onClose={() => setEntryOpen(false)} client={client} initial={editingEntry} onSaved={toast} />
@@ -210,7 +212,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
         initial={client}
         onSave={(v) => {
           updateClient(client.id, v);
-          toast("Klienti u përditësua");
+          toast(t.clients.updated);
         }}
       />
       <Confirm
@@ -218,37 +220,38 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
         onClose={() => setDeletingEntry(null)}
         onConfirm={() => {
           if (deletingEntry) deleteEntry(deletingEntry.id);
-          toast("Materiali u fshi");
+          toast(t.client.entryDeleted);
         }}
-        title="Fshij materialin?"
-        text={`"${deletingEntry?.name}" (${deletingEntry?.qty} ${deletingEntry?.unit}) do të hiqet nga ky klient.`}
+        title={t.client.deleteEntryTitle}
+        text={t.client.deleteEntryText(deletingEntry?.name ?? "", deletingEntry ? `${deletingEntry.qty} ${unit(deletingEntry.unit)}` : "")}
       />
       <Confirm
         open={deleteClientOpen}
         onClose={() => setDeleteClientOpen(false)}
         onConfirm={() => {
           deleteClient(client.id);
-          toast("Klienti u fshi");
+          toast(t.clients.deleted);
           router.replace("/clients");
         }}
-        title="Fshij klientin?"
-        text={`"${client.name}" dhe ${mine.length} materiale do të fshihen. Ky veprim nuk kthehet mbrapsht.`}
+        title={t.clients.deleteTitle}
+        text={t.client.deleteText(client.name, mine.length)}
       />
     </>
   );
 }
 
 function EntryMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const { t } = useT();
   return (
     <Menu
       trigger={() => (
-        <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label="Veprime">
+        <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-200/60 hover:text-ink" aria-label={t.common.actions}>
           <Ellipsis size={18} />
         </button>
       )}
       items={[
-        { label: "Ndrysho", icon: <Pencil size={15} />, onClick: onEdit },
-        { label: "Fshij", icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
+        { label: t.common.edit, icon: <Pencil size={15} />, onClick: onEdit },
+        { label: t.common.delete, icon: <Trash2 size={15} />, onClick: onDelete, danger: true },
       ]}
     />
   );

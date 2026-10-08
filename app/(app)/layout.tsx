@@ -3,21 +3,25 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Package, Settings, Users } from "lucide-react";
+import { ChevronDown, Languages, LogOut, Package, Settings, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Avatar, Menu, cn } from "@/components/ui";
+import { LANGS, useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
-
-const NAV = [
-  { href: "/clients", label: "Klientët", icon: Users },
-  { href: "/materials", label: "Materialet", icon: Package },
-  { href: "/settings", label: "Profili", icon: Settings },
-];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, ready, logout } = useStore();
+  const { t, lang, setLang } = useT();
   const router = useRouter();
   const path = usePathname();
+
+  const NAV = [
+    { href: "/clients", label: t.nav.clients, icon: Users },
+    { href: "/materials", label: t.nav.materials, icon: Package },
+    { href: "/settings", label: t.nav.profile, icon: Settings },
+  ];
+  const current = LANGS.find((l) => l.id === lang)!;
+  const other = LANGS.find((l) => l.id !== lang)!;
 
   useEffect(() => {
     if (ready && !user) router.replace("/login");
@@ -80,8 +84,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
             )}
             items={[
-              { label: "Profili", icon: <Settings size={16} />, onClick: () => router.push("/settings") },
-              { label: "Dil", icon: <LogOut size={16} />, onClick: doLogout, danger: true },
+              { label: t.nav.profile, icon: <Settings size={16} />, onClick: () => router.push("/settings") },
+              {
+                label: t.lang.label,
+                icon: <Languages size={16} />,
+                right: (
+                  <span className="flex items-center gap-1 text-xs font-semibold">
+                    <span className="rounded-md bg-brand-50 px-1.5 py-0.5 text-brand-700">{current.short}</span>
+                    <span className="text-slate-300">→</span>
+                    <span className="text-muted">{other.short}</span>
+                  </span>
+                ),
+                onClick: () => setLang(other.id),
+              },
+              { label: t.common.logout, icon: <LogOut size={16} />, onClick: doLogout, danger: true },
             ]}
           />
         </div>

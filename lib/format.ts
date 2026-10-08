@@ -13,17 +13,6 @@ export const todayIso = () => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 
-export const MONTHS_SQ = [
-  "Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor",
-  "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor",
-];
-
-/** "2026-10" -> "Tetor 2026" */
-export const monthLabel = (ym: string) => {
-  const [y, m] = ym.split("-");
-  return `${MONTHS_SQ[Number(m) - 1]} ${y}`;
-};
-
 export const initials = (name: string) =>
   name
     .split(/\s+/)

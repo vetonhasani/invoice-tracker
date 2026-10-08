@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Package, Plus, RotateCcw, Sparkles } from "lucide-react";
 import { Avatar, Button, Field, Input, Modal, cn, inputCls } from "./ui";
 import { UNITS, euro, todayIso } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import type { Client, Entry, Material } from "@/lib/types";
 
@@ -25,6 +26,7 @@ export function EntryForm({
   onSaved: (msg: string) => void;
 }) {
   const { materials, addMaterial, addEntry, updateEntry } = useStore();
+  const { t, unit: unitLabel } = useT();
 
   const [material, setMaterial] = useState<Material | null>(null);
   const [newMat, setNewMat] = useState<{ name: string; unit: string } | null>(null);
@@ -75,9 +77,9 @@ export function EntryForm({
 
   const save = () => {
     const err: Record<string, string> = {};
-    if (!material && !newMat?.name.trim()) err.material = "Zgjidh një material.";
-    if (!(qtyN > 0)) err.qty = "Shkruaj sasinë.";
-    if (!(priceN >= 0) || price === "") err.price = "Shkruaj vlerën.";
+    if (!material && !newMat?.name.trim()) err.material = t.entryForm.pickMaterial;
+    if (!(qtyN > 0)) err.qty = t.entryForm.enterQty;
+    if (!(priceN >= 0) || price === "") err.price = t.entryForm.enterPrice;
     setErrors(err);
     if (Object.keys(err).length) return;
 
@@ -87,10 +89,10 @@ export function EntryForm({
     const data = { clientId: client.id, materialId: m.id, name: m.name, unit: m.unit, price: priceN, qty: qtyN, date };
     if (initial) {
       updateEntry(initial.id, data);
-      onSaved("Materiali u përditësua");
+      onSaved(t.entryForm.updated);
     } else {
       addEntry(data);
-      onSaved(newMat ? "Materiali u shtua (edhe në katalog)" : "Materiali u shtua");
+      onSaved(newMat ? t.entryForm.addedToCatalog : t.entryForm.added);
     }
     onClose();
   };
@@ -99,15 +101,15 @@ export function EntryForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? "Ndrysho materialin" : "Shto material"}
-      description="Zgjidh materialin, shkruaj vetëm sasinë"
+      title={initial ? t.entryForm.editTitle : t.entryForm.addTitle}
+      description={t.entryForm.description}
       footer={
         <>
           <Button variant="secondary" size="lg" className="sm:h-10 sm:text-sm" onClick={onClose}>
-            Anulo
+            {t.common.cancel}
           </Button>
           <Button size="lg" className="sm:h-10 sm:text-sm" onClick={save}>
-            {initial ? "Ruaj ndryshimet" : "Ruaj"}
+            {initial ? t.common.saveChanges : t.common.save}
           </Button>
         </>
       }
@@ -119,14 +121,14 @@ export function EntryForm({
           save();
         }}
       >
-        <Field label="Klienti">
+        <Field label={t.entryForm.client}>
           <div className={cn(inputCls, "flex items-center gap-2.5 bg-slate-50 text-muted shadow-none")}>
             <Avatar name={client.name} size={24} />
             <span className="font-medium text-ink">{client.name}</span>
           </div>
         </Field>
 
-        <Field label="Materiali" error={errors.material}>
+        <Field label={t.cols.material} error={errors.material}>
           <MaterialPicker
             materials={materials}
             value={newMat ? null : material}
@@ -143,12 +145,12 @@ export function EntryForm({
         {newMat && (
           <div className="animate-pop-in rounded-xl border border-dashed border-brand-200 bg-brand-50/50 p-3.5">
             <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-brand-700">
-              <Sparkles size={15} /> Material i ri: do të ruhet edhe në katalog
+              <Sparkles size={15} /> {t.entryForm.newMaterial}
             </div>
-            <Field label="Njësia">
+            <Field label={t.cols.unit}>
               <select value={newMat.unit} onChange={(e) => setNewMat({ ...newMat, unit: e.target.value })} className={inputCls}>
                 {UNITS.map((u) => (
-                  <option key={u}>{u}</option>
+                  <option key={u} value={u}>{unitLabel(u)}</option>
                 ))}
               </select>
             </Field>
@@ -156,7 +158,7 @@ export function EntryForm({
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label={`Sasia${unit ? ` (${unit})` : ""} *`} error={errors.qty}>
+          <Field label={`${t.cols.qty}${unit ? ` (${unitLabel(unit)})` : ""} *`} error={errors.qty}>
             <Input
               ref={qtyRef}
               inputMode="decimal"
@@ -167,7 +169,7 @@ export function EntryForm({
             />
           </Field>
           <Field
-            label="Vlera (€)"
+            label={t.entryForm.price}
             error={errors.price}
             right={
               catalogPrice !== undefined &&
@@ -194,15 +196,15 @@ export function EntryForm({
           </Field>
         </div>
 
-        <Field label="Data">
+        <Field label={t.cols.date}>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
 
         <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-50 to-indigo-50 px-4 py-3.5">
           <div>
-            <div className="text-[13px] font-semibold text-brand-900">Çmimi</div>
+            <div className="text-[13px] font-semibold text-brand-900">{t.cols.amount}</div>
             <div className="tabular text-xs text-brand-700/70">
-              {isFinite(qtyN) && qtyN > 0 && isFinite(priceN) ? `${qtyN} × ${euro(priceN)}` : "Sasia × Vlera"}
+              {isFinite(qtyN) && qtyN > 0 && isFinite(priceN) ? `${qtyN} × ${euro(priceN)}` : t.entryForm.formula}
             </div>
           </div>
           <div className="tabular text-2xl font-bold tracking-tight text-brand-700">{euro(total)}</div>
@@ -227,6 +229,7 @@ function MaterialPicker({
   onPick: (m: Material) => void;
   onCreate: (name: string) => void;
 }) {
+  const { t, unit } = useT();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
@@ -276,11 +279,11 @@ function MaterialPicker({
           ) : newName ? (
             <span className="font-semibold text-ink">{newName}</span>
           ) : (
-            <span>Zgjidh nga katalogu…</span>
+            <span>{t.entryForm.pickPh}</span>
           )}
           <span className="flex shrink-0 items-center gap-2 text-sm text-muted">
-            {value && `${euro(value.price)} / ${value.unit}`}
-            {newName && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-700">i ri</span>}
+            {value && `${euro(value.price)} / ${unit(value.unit)}`}
+            {newName && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-700">{t.entryForm.isNew}</span>}
             <ChevronDown size={16} />
           </span>
         </button>
@@ -298,14 +301,14 @@ function MaterialPicker({
             if (e.key === "Enter") { e.preventDefault(); if (count) choose(hi); }
             if (e.key === "Escape") { e.stopPropagation(); setOpen(false); }
           }}
-          placeholder="Shkruaj për të kërkuar…"
+          placeholder={t.entryForm.searchPh}
           className={cn(inputCls, "border-brand-500 ring-4 ring-brand-100")}
         />
       )}
 
       {open && (
         <div className="absolute inset-x-0 z-10 mt-1.5 max-h-64 animate-pop-in overflow-y-auto rounded-xl border border-line bg-white p-1.5 shadow-pop">
-          {list.length === 0 && !showCreate && <div className="px-3 py-6 text-center text-sm text-muted">Katalogu është bosh</div>}
+          {list.length === 0 && !showCreate && <div className="px-3 py-6 text-center text-sm text-muted">{t.entryForm.catalogEmpty}</div>}
           {list.map((m, i) => (
             <button
               type="button"
@@ -319,7 +322,7 @@ function MaterialPicker({
               </span>
               <span className="min-w-0 flex-1 truncate text-sm font-semibold">{m.name}</span>
               <span className="tabular shrink-0 text-sm text-muted">
-                {euro(m.price)} <span className="text-xs">/ {m.unit}</span>
+                {euro(m.price)} <span className="text-xs">/ {unit(m.unit)}</span>
               </span>
               {value?.id === m.id && <Check size={16} className="text-brand-600" />}
             </button>
@@ -337,7 +340,7 @@ function MaterialPicker({
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-100">
                 <Plus size={16} />
               </span>
-              Shto “{q.trim()}” në katalog
+              {t.entryForm.addToCatalog(q.trim())}
             </button>
           )}
         </div>

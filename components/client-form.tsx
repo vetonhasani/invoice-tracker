@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Field, Input, Modal, inputCls, cn } from "./ui";
+import { useT } from "@/lib/i18n";
 import type { Client } from "@/lib/types";
 
 type Values = { name: string; phone: string; address: string; note: string };
@@ -17,6 +18,7 @@ export function ClientForm({
   initial?: Client | null;
   onSave: (v: Values) => void;
 }) {
+  const { t } = useT();
   const [v, setV] = useState<Values>({ name: "", phone: "", address: "", note: "" });
   const [error, setError] = useState("");
 
@@ -29,7 +31,7 @@ export function ClientForm({
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!v.name.trim()) return setError("Emri është i detyrueshëm.");
+    if (!v.name.trim()) return setError(t.clientForm.nameRequired);
     onSave({ ...v, name: v.name.trim() });
     onClose();
   };
@@ -38,37 +40,37 @@ export function ClientForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? "Ndrysho klientin" : "Shto klient"}
-      description="Vetëm emri është i detyrueshëm"
+      title={initial ? t.clientForm.editTitle : t.clientForm.addTitle}
+      description={t.clientForm.description}
       footer={
         <>
           <Button variant="secondary" size="lg" className="sm:h-10 sm:text-sm" onClick={onClose}>
-            Anulo
+            {t.common.cancel}
           </Button>
           <Button size="lg" className="sm:h-10 sm:text-sm" onClick={() => submit()}>
-            {initial ? "Ruaj ndryshimet" : "Ruaj klientin"}
+            {initial ? t.common.saveChanges : t.clientForm.save}
           </Button>
         </>
       }
     >
       <form onSubmit={submit} className="space-y-4 pb-3">
-        <Field label="Emri *" error={error}>
-          <Input autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="p.sh. Arben Krasniqi" />
+        <Field label={t.clientForm.name} error={error}>
+          <Input autoFocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t.clientForm.namePh} />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Telefoni">
+          <Field label={t.clientForm.phone}>
             <Input inputMode="tel" value={v.phone} onChange={(e) => setV({ ...v, phone: e.target.value })} placeholder="044 000 000" />
           </Field>
-          <Field label="Adresa">
-            <Input value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} placeholder="p.sh. Prishtinë" />
+          <Field label={t.clientForm.address}>
+            <Input value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} placeholder={t.clientForm.addressPh} />
           </Field>
         </div>
-        <Field label="Shënim">
+        <Field label={t.clientForm.note}>
           <textarea
             rows={3}
             value={v.note}
             onChange={(e) => setV({ ...v, note: e.target.value })}
-            placeholder="Opsionale"
+            placeholder={t.common.optional}
             className={cn(inputCls, "h-auto resize-none py-2.5")}
           />
         </Field>

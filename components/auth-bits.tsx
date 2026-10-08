@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "./ui";
+import { useT } from "@/lib/i18n";
 
 export function AuthHeader({ icon, title, text }: { icon?: React.ReactNode; title: string; text: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export function AuthHeader({ icon, title, text }: { icon?: React.ReactNode; titl
 }
 
 export function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const { t } = useT();
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
@@ -27,7 +29,7 @@ export function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>
         type="button"
         onClick={() => setShow((s) => !s)}
         className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:text-ink"
-        aria-label={show ? "Fshih fjalëkalimin" : "Shfaq fjalëkalimin"}
+        aria-label={show ? t.common.hidePassword : t.common.showPassword}
       >
         {show ? <EyeOff size={17} /> : <Eye size={17} />}
       </button>
