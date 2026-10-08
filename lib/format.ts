@@ -7,6 +7,13 @@ export const dateSq = (iso: string) => {
   return `${d}.${m}.${y}`;
 };
 
+/** ISO date-time -> 07.10.2026 14:32 (local time) */
+export const dateTimeSq = (iso: string) => {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
 export const todayIso = () => {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, "0");

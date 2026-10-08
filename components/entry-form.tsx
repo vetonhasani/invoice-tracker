@@ -25,9 +25,10 @@ export function EntryForm({
   initial?: Entry | null;
   onSaved: (msg: string) => void;
 }) {
-  const { materials, addMaterial, addEntry, updateEntry } = useStore();
+  const { materials, companies, addMaterial, addEntry, updateEntry } = useStore();
   const { t, unit: unitLabel } = useT();
 
+  const [companyId, setCompanyId] = useState(""); // "" = all companies
   const [material, setMaterial] = useState<Material | null>(null);
   const [newMat, setNewMat] = useState<{ name: string; unit: string } | null>(null);
   const [qty, setQty] = useState("");
@@ -41,18 +42,22 @@ export function EntryForm({
     setErrors({});
     setNewMat(null);
     if (initial) {
-      const m = materials.find((x) => x.id === initial.materialId) ?? {
+      const m: Material = materials.find((x) => x.id === initial.materialId) ?? {
         id: initial.materialId,
         name: initial.name,
         unit: initial.unit,
         price: initial.price,
+        companyId: initial.companyId,
+        priceHistory: [],
       };
       setMaterial(m);
+      setCompanyId(m.companyId ?? "");
       setQty(String(initial.qty));
       setPrice(initial.price.toFixed(2));
       setDate(initial.date);
     } else {
       setMaterial(null);
+      setCompanyId("");
       setQty("");
       setPrice("");
       setDate(todayIso());
@@ -62,6 +67,7 @@ export function EntryForm({
 
   const pick = (m: Material) => {
     setMaterial(m);
+    if (m.companyId) setCompanyId(m.companyId);
     setNewMat(null);
     setPrice(m.price.toFixed(2));
     setErrors({});
@@ -74,6 +80,15 @@ export function EntryForm({
   const catalogPrice = material && !newMat ? materials.find((m) => m.id === material.id)?.price : undefined;
   const isAuto = catalogPrice !== undefined && priceN === catalogPrice;
   const unit = newMat?.unit ?? material?.unit;
+  const shown = companyId ? materials.filter((m) => m.companyId === companyId) : materials;
+
+  const changeCompany = (id: string) => {
+    setCompanyId(id);
+    if (id && material && material.companyId !== id) {
+      setMaterial(null);
+      setPrice("");
+    }
+  };
 
   const save = () => {
     const err: Record<string, string> = {};
@@ -84,9 +99,20 @@ export function EntryForm({
     if (Object.keys(err).length) return;
 
     let m = material!;
-    if (newMat) m = addMaterial({ name: newMat.name.trim(), unit: newMat.unit, price: priceN });
+    if (newMat) m = addMaterial({ name: newMat.name.trim(), unit: newMat.unit, price: priceN, companyId: companyId || undefined });
 
-    const data = { clientId: client.id, materialId: m.id, name: m.name, unit: m.unit, price: priceN, qty: qtyN, date };
+    const company = companies.find((c) => c.id === m.companyId);
+    const data = {
+      clientId: client.id,
+      materialId: m.id,
+      name: m.name,
+      unit: m.unit,
+      price: priceN,
+      companyId: company?.id,
+      companyName: company?.name,
+      qty: qtyN,
+      date,
+    };
     if (initial) {
       updateEntry(initial.id, data);
       onSaved(t.entryForm.updated);
@@ -128,9 +154,19 @@ export function EntryForm({
           </div>
         </Field>
 
+        <Field label={t.companies.label}>
+          <select value={companyId} onChange={(e) => changeCompany(e.target.value)} className={inputCls}>
+            <option value="">{t.companies.all}</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </Field>
+
         <Field label={t.cols.material} error={errors.material}>
           <MaterialPicker
-            materials={materials}
+            materials={shown}
+            companyName={(id) => companies.find((c) => c.id === id)?.name}
             value={newMat ? null : material}
             newName={newMat?.name}
             onPick={pick}
@@ -218,12 +254,14 @@ export function EntryForm({
 /* ---------- Searchable material picker ---------- */
 function MaterialPicker({
   materials,
+  companyName,
   value,
   newName,
   onPick,
   onCreate,
 }: {
   materials: Material[];
+  companyName: (id?: string) => string | undefined;
   value: Material | null;
   newName?: string;
   onPick: (m: Material) => void;
@@ -320,7 +358,10 @@ function MaterialPicker({
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-50 text-amber-600">
                 <Package size={16} />
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold">{m.name}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold">{m.name}</span>
+                <span className="block truncate text-xs text-muted">{companyName(m.companyId) ?? t.companies.none}</span>
+              </span>
               <span className="tabular shrink-0 text-sm text-muted">
                 {euro(m.price)} <span className="text-xs">/ {unit(m.unit)}</span>
               </span>

@@ -151,7 +151,10 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
               <tbody>
                 {rows.map((e) => (
                   <tr key={e.id} className="border-b border-line hover:bg-slate-50/80">
-                    <td className="px-5 py-3.5 font-medium">{e.name}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="font-medium">{e.name}</div>
+                      {e.companyName && <div className="text-xs text-muted">{e.companyName}</div>}
+                    </td>
                     <td className="tabular px-5 py-3.5 text-muted">{dateSq(e.date)}</td>
                     <td className="tabular px-5 py-3.5 text-right">
                       {e.qty} <span className="text-xs text-muted">{unit(e.unit)}</span>
@@ -185,7 +188,7 @@ export default function ClientPage({ params }: { params: Promise<{ id: string }>
                       <span className="tabular font-semibold">{euro(entryTotal(e))}</span>
                     </div>
                     <div className="tabular mt-0.5 flex justify-between gap-3 text-[13px] text-muted">
-                      <span>{dateSq(e.date)}</span>
+                      <span className="truncate">{dateSq(e.date)}{e.companyName && ` · ${e.companyName}`}</span>
                       <span>{e.qty} {unit(e.unit)} × {euro(e.price)}</span>
                     </div>
                   </div>

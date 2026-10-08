@@ -1,35 +1,69 @@
-import type { Client, Entry, Material } from "./types";
+import type { Client, Company, Entry, Material, PricePoint } from "./types";
 
 // Mock data — replaced by Turso later.
 
+export const seedCompanies: Company[] = [
+  { id: "co1", name: "Fero-Beton Sh.p.k.", phone: "038 500 100", address: "Prishtinë", createdAt: "2024-01-10" },
+  { id: "co2", name: "Tulltorja Kosova", phone: "029 222 333", address: "Ferizaj", createdAt: "2024-01-15" },
+  { id: "co3", name: "Termo-Izol", phone: "044 300 400", address: "Gjilan", createdAt: "2024-02-01" },
+];
+
+/** [date, price] pairs, oldest first; the last one is the current catalog price. */
+const h = (...points: [string, number][]): PricePoint[] => points.map(([d, price]) => ({ at: `${d}T09:00:00`, price }));
+
+const mat = (id: string, name: string, unit: string, companyId: string, priceHistory: PricePoint[]): Material => ({
+  id,
+  name,
+  unit,
+  companyId,
+  priceHistory,
+  price: priceHistory[priceHistory.length - 1].price,
+});
+
 export const seedMaterials: Material[] = [
-  { id: "m1", name: "Çimento 25kg", unit: "thes", price: 6.5 },
-  { id: "m2", name: "Rërë", unit: "m³", price: 28 },
-  { id: "m3", name: "Tulla 25×12", unit: "copë", price: 0.42 },
-  { id: "m4", name: "Hekur armature Ø12", unit: "shufër", price: 7.9 },
-  { id: "m5", name: "Gips 25kg", unit: "thes", price: 9.8 },
-  { id: "m6", name: "Rrjetë fasade", unit: "m²", price: 15.25 },
-  { id: "m7", name: "Ngjitës pllakash 25kg", unit: "thes", price: 8.5 },
-  { id: "m8", name: "Stiropor 5cm", unit: "m²", price: 4.2 },
-  { id: "m9", name: "Çimento e bardhë 25kg", unit: "thes", price: 9 },
+  mat("m1", "Çimento 25kg", "thes", "co1", h(["2024-01-12", 5.8], ["2024-09-02", 6.2], ["2025-03-15", 6.9], ["2025-11-20", 6.5])),
+  mat("m2", "Rërë", "m³", "co1", h(["2024-01-12", 25], ["2025-02-10", 27], ["2026-04-01", 28])),
+  mat("m3", "Tulla 25×12", "copë", "co2", h(["2024-01-20", 0.38], ["2024-06-15", 0.4], ["2025-05-05", 0.45], ["2026-01-08", 0.42])),
+  mat("m4", "Hekur armature Ø12", "shufër", "co1", h(["2024-01-12", 8.6], ["2024-08-01", 8.1], ["2025-06-12", 7.5], ["2026-02-03", 7.9])),
+  mat("m5", "Gips 25kg", "thes", "co3", h(["2024-02-05", 9.2], ["2025-04-18", 9.8])),
+  mat("m6", "Rrjetë fasade", "m²", "co3", h(["2024-02-05", 14], ["2025-09-01", 15.25])),
+  mat("m7", "Ngjitës pllakash 25kg", "thes", "co3", h(["2024-02-05", 7.9], ["2024-12-01", 8.2], ["2026-03-10", 8.5])),
+  mat("m8", "Stiropor 5cm", "m²", "co3", h(["2024-02-05", 4.6], ["2025-01-15", 4.4], ["2025-10-10", 4.2])),
+  mat("m9", "Çimento e bardhë 25kg", "thes", "co1", h(["2024-03-01", 8.4], ["2025-07-07", 9])),
 ];
 
 export const seedClients: Client[] = [
-  { id: "c1", name: "Arben Krasniqi", phone: "044 123 456", address: "Prishtinë", createdAt: "2026-08-12" },
-  { id: "c2", name: "Ndërtimi Sh.p.k.", phone: "038 220 330", address: "Ferizaj", createdAt: "2026-08-20" },
-  { id: "c3", name: "Drita Berisha", phone: "045 987 654", address: "Gjilan", createdAt: "2026-09-01" },
-  { id: "c4", name: "Besnik Gashi", phone: "049 111 222", address: "Pejë", createdAt: "2026-09-05" },
+  { id: "c1", name: "Arben Krasniqi", phone: "044 123 456", address: "Prishtinë", createdAt: "2024-03-12" },
+  { id: "c2", name: "Ndërtimi Sh.p.k.", phone: "038 220 330", address: "Ferizaj", createdAt: "2024-05-20" },
+  { id: "c3", name: "Drita Berisha", phone: "045 987 654", address: "Gjilan", createdAt: "2025-02-01" },
+  { id: "c4", name: "Besnik Gashi", phone: "049 111 222", address: "Pejë", createdAt: "2025-06-05" },
   { id: "c5", name: "Fatmir Hoxha", phone: "044 765 432", createdAt: "2026-09-09" },
 ];
 
-const m = (id: string) => seedMaterials.find((x) => x.id === id)!;
+/** Catalog price that was valid on a given day. */
+const priceOn = (m: Material, date: string) =>
+  [...m.priceHistory].reverse().find((p) => p.at.slice(0, 10) <= date)?.price ?? m.priceHistory[0].price;
+
 let n = 0;
 const e = (clientId: string, materialId: string, qty: number, date: string): Entry => {
-  const mat = m(materialId);
-  return { id: `e${++n}`, clientId, materialId, name: mat.name, unit: mat.unit, price: mat.price, qty, date };
+  const m = seedMaterials.find((x) => x.id === materialId)!;
+  const co = seedCompanies.find((c) => c.id === m.companyId);
+  return {
+    id: `e${++n}`,
+    clientId,
+    materialId,
+    name: m.name,
+    unit: m.unit,
+    price: priceOn(m, date),
+    companyId: co?.id,
+    companyName: co?.name,
+    qty,
+    date,
+  };
 };
 
 export const seedEntries: Entry[] = [
+  // 2026
   e("c1", "m1", 40, "2026-10-02"),
   e("c1", "m2", 6, "2026-10-03"),
   e("c1", "m3", 500, "2026-10-05"),
@@ -57,4 +91,26 @@ export const seedEntries: Entry[] = [
 
   e("c5", "m1", 20, "2026-09-10"),
   e("c5", "m8", 45, "2026-09-08"),
+
+  // 2025
+  e("c1", "m1", 60, "2025-04-10"),
+  e("c1", "m3", 1200, "2025-05-22"),
+  e("c1", "m4", 40, "2025-07-03"),
+  e("c2", "m1", 200, "2025-03-28"),
+  e("c2", "m2", 25, "2025-06-14"),
+  e("c2", "m3", 3000, "2025-08-19"),
+  e("c2", "m7", 60, "2025-10-02"),
+  e("c3", "m5", 40, "2025-02-20"),
+  e("c3", "m8", 120, "2025-11-11"),
+  e("c4", "m1", 30, "2025-06-25"),
+  e("c4", "m6", 35, "2025-09-30"),
+
+  // 2024
+  e("c1", "m1", 80, "2024-03-15"),
+  e("c1", "m2", 10, "2024-04-02"),
+  e("c1", "m3", 1500, "2024-05-18"),
+  e("c2", "m4", 120, "2024-06-07"),
+  e("c2", "m1", 150, "2024-07-21"),
+  e("c2", "m6", 40, "2024-10-09"),
+  e("c2", "m9", 15, "2024-11-30"),
 ];

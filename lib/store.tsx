@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { Client, Entry, Material, User } from "./types";
-import { seedClients, seedEntries, seedMaterials } from "./seed";
+import type { Client, Company, Entry, Material, User } from "./types";
+import { seedClients, seedCompanies, seedEntries, seedMaterials } from "./seed";
 import { uid } from "./format";
 
 /**
@@ -11,7 +11,7 @@ import { uid } from "./format";
  * server actions / Turso queries later — the pages won't need to change.
  */
 
-type State = { user: User | null; clients: Client[]; materials: Material[]; entries: Entry[] };
+type State = { user: User | null; clients: Client[]; companies: Company[]; materials: Material[]; entries: Entry[] };
 
 type Store = State & {
   ready: boolean;
@@ -22,9 +22,13 @@ type Store = State & {
   addClient: (c: Omit<Client, "id" | "createdAt">) => Client;
   updateClient: (id: string, c: Partial<Client>) => void;
   deleteClient: (id: string) => void;
-  // catalog
-  addMaterial: (m: Omit<Material, "id">) => Material;
-  updateMaterial: (id: string, m: Partial<Material>) => void;
+  // companies (suppliers)
+  addCompany: (c: Omit<Company, "id" | "createdAt">) => Company;
+  updateCompany: (id: string, c: Partial<Company>) => void;
+  deleteCompany: (id: string) => void;
+  // catalog — a price change appends to the material's priceHistory
+  addMaterial: (m: Omit<Material, "id" | "priceHistory">) => Material;
+  updateMaterial: (id: string, m: Partial<Omit<Material, "id" | "priceHistory">>) => void;
   deleteMaterial: (id: string) => void;
   // entries
   addEntry: (e: Omit<Entry, "id">) => void;
@@ -34,7 +38,24 @@ type Store = State & {
 };
 
 const KEY = "invoice-tracker:v1";
-const initial: State = { user: null, clients: seedClients, materials: seedMaterials, entries: seedEntries };
+const initial: State = {
+  user: null,
+  clients: seedClients,
+  companies: seedCompanies,
+  materials: seedMaterials,
+  entries: seedEntries,
+};
+
+const nowIso = () => new Date().toISOString();
+const today = () => nowIso().slice(0, 10);
+
+/** Older saved data has no price history — start it at the current price. */
+function migrate(s: State): State {
+  return {
+    ...s,
+    materials: s.materials.map((m) => (m.priceHistory?.length ? m : { ...m, priceHistory: [{ at: nowIso(), price: m.price }] })),
+  };
+}
 
 const Ctx = createContext<Store | null>(null);
 
@@ -45,7 +66,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState({ ...initial, ...JSON.parse(raw) });
+      if (raw) setState(migrate({ ...initial, ...JSON.parse(raw) }));
     } catch {}
     setReady(true);
   }, []);
@@ -68,7 +89,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       logout: () => set((s) => ({ ...s, user: null })),
 
       addClient: (c) => {
-        const client: Client = { ...c, id: uid(), createdAt: new Date().toISOString().slice(0, 10) };
+        const client: Client = { ...c, id: uid(), createdAt: today() };
         set((s) => ({ ...s, clients: [client, ...s.clients] }));
         return client;
       },
@@ -81,13 +102,39 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           entries: s.entries.filter((x) => x.clientId !== id),
         })),
 
+      addCompany: (c) => {
+        const company: Company = { ...c, id: uid(), createdAt: today() };
+        set((s) => ({ ...s, companies: [...s.companies, company] }));
+        return company;
+      },
+      updateCompany: (id, c) =>
+        set((s) => ({ ...s, companies: s.companies.map((x) => (x.id === id ? { ...x, ...c } : x)) })),
+      // Materials stay in the catalog without a company; entries keep their company snapshot.
+      deleteCompany: (id) =>
+        set((s) => ({
+          ...s,
+          companies: s.companies.filter((x) => x.id !== id),
+          materials: s.materials.map((m) => (m.companyId === id ? { ...m, companyId: undefined } : m)),
+        })),
+
       addMaterial: (m) => {
-        const mat: Material = { ...m, id: uid() };
+        const mat: Material = { ...m, id: uid(), priceHistory: [{ at: nowIso(), price: m.price }] };
         set((s) => ({ ...s, materials: [...s.materials, mat] }));
         return mat;
       },
       updateMaterial: (id, m) =>
-        set((s) => ({ ...s, materials: s.materials.map((x) => (x.id === id ? { ...x, ...m } : x)) })),
+        set((s) => ({
+          ...s,
+          materials: s.materials.map((x) => {
+            if (x.id !== id) return x;
+            const changed = m.price !== undefined && m.price !== x.price;
+            return {
+              ...x,
+              ...m,
+              priceHistory: changed ? [...x.priceHistory, { at: nowIso(), price: m.price! }] : x.priceHistory,
+            };
+          }),
+        })),
       deleteMaterial: (id) => set((s) => ({ ...s, materials: s.materials.filter((x) => x.id !== id) })),
 
       addEntry: (e) => set((s) => ({ ...s, entries: [{ ...e, id: uid() }, ...s.entries] })),

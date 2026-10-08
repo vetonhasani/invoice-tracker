@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, Languages, LogOut, Package, Settings, Users } from "lucide-react";
+import { Building2, ChevronDown, Languages, LogOut, Package, Settings, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Avatar, Menu, cn } from "@/components/ui";
 import { LANGS, useT } from "@/lib/i18n";
@@ -18,6 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const NAV = [
     { href: "/clients", label: t.nav.clients, icon: Users },
     { href: "/materials", label: t.nav.materials, icon: Package },
+    { href: "/companies", label: t.nav.companies, icon: Building2 },
     { href: "/settings", label: t.nav.profile, icon: Settings },
   ];
   const current = LANGS.find((l) => l.id === lang)!;
@@ -48,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Logo />
             </Link>
             <nav className="hidden items-center gap-1 sm:flex">
-              {NAV.slice(0, 2).map((n) => {
+              {NAV.slice(0, 3).map((n) => {
                 const on = path.startsWith(n.href);
                 return (
                   <Link
@@ -107,7 +108,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden">
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-4">
           {NAV.map((n) => {
             const on = path.startsWith(n.href);
             return (

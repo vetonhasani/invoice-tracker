@@ -48,7 +48,7 @@ const sq = {
 
   lang: { label: "Gjuha", text: "Zgjidh gjuhën e aplikacionit." },
 
-  nav: { clients: "Klientët", materials: "Materialet", profile: "Profili" },
+  nav: { clients: "Klientët", materials: "Materialet", companies: "Kompanitë", profile: "Profili" },
 
   // Column names follow the original Excel sheet
   cols: { material: "Materiali", date: "Data", qty: "Sasia", price: "Vlera", amount: "Çmimi", unit: "Njësia" },
@@ -160,6 +160,60 @@ const sq = {
     namePh: "p.sh. Çimento 25kg",
     nameRequired: "Shkruaj emrin e materialit.",
     price: "Vlera (€) *",
+    colChange: "Ndryshimi i fundit",
+    priceHistory: "Historiku i çmimit",
+    priceHistoryText: (n: number) =>
+      n === 0 ? "Çmimi nuk ka ndryshuar ende" : `${n} ${plural(n, "ndryshim", "ndryshime")} të çmimit`,
+    initialPrice: "Çmimi fillestar",
+    current: "Aktual",
+    lowest: "Më i ulëti",
+    highest: "Më i larti",
+    sinceStart: "Që nga fillimi",
+    dateTime: "Data dhe ora",
+    change: "Ndryshimi",
+    priceRose: "Çmimi u rrit",
+    priceFell: "Çmimi u ul",
+    noChanges: "Pa ndryshime",
+    priceChangeHint: "Ndryshimi i çmimit ruhet në historik.",
+  },
+
+  companies: {
+    title: "Kompanitë",
+    subtitle: "Furnitorët nga i blen materialet",
+    label: "Kompania",
+    add: "Shto kompani",
+    fab: "Kompani",
+    search: "Kërko kompani, telefon ose qytet…",
+    notFound: "Asnjë kompani nuk u gjet",
+    empty: "Ende nuk ke kompani",
+    emptyText: "Shto furnitorët për t'i lidhur me materialet.",
+    colCompany: "Kompania",
+    colPhone: "Telefoni",
+    colMaterials: "Materiale",
+    colSold: "Shitur te klientët",
+    viewMaterials: "Shiko materialet",
+    none: "Pa kompani",
+    all: "Të gjitha kompanitë",
+    added: "Kompania u shtua",
+    updated: "Kompania u përditësua",
+    deleted: "Kompania u fshi",
+    deleteTitle: "Fshij kompaninë?",
+    deleteText: (name: string, n: number) =>
+      `"${name}" do të fshihet. ${n} materiale në katalog mbeten, por pa kompani.`,
+    addTitle: "Shto kompani",
+    editTitle: "Ndrysho kompaninë",
+    description: "Vetëm emri është i detyrueshëm",
+    save: "Ruaj kompaninë",
+    namePh: "p.sh. Fero-Beton Sh.p.k.",
+  },
+
+  history: {
+    title: "Historiku i totalit",
+    subtitle: "Totali i të gjithë klientëve sipas viteve",
+    allTime: "Gjithsej",
+    totalFor: (period: string) => `Totali · ${period}`,
+    byMonth: (year: string) => `Sipas muajve · ${year}`,
+    entriesIn: (n: number) => `${n} materiale`,
   },
 
   settings: {
@@ -255,7 +309,7 @@ const en: Dict = {
 
   lang: { label: "Language", text: "Choose the app language." },
 
-  nav: { clients: "Clients", materials: "Materials", profile: "Profile" },
+  nav: { clients: "Clients", materials: "Materials", companies: "Companies", profile: "Profile" },
 
   cols: { material: "Material", date: "Date", qty: "Quantity", price: "Unit price", amount: "Amount", unit: "Unit" },
 
@@ -365,6 +419,59 @@ const en: Dict = {
     namePh: "e.g. Cement 25kg",
     nameRequired: "Enter the material name.",
     price: "Unit price (€) *",
+    colChange: "Last change",
+    priceHistory: "Price history",
+    priceHistoryText: (n) => (n === 0 ? "The price hasn't changed yet" : `${n} price ${plural(n, "change", "changes")}`),
+    initialPrice: "Initial price",
+    current: "Current",
+    lowest: "Lowest",
+    highest: "Highest",
+    sinceStart: "Since first price",
+    dateTime: "Date & time",
+    change: "Change",
+    priceRose: "Price went up",
+    priceFell: "Price went down",
+    noChanges: "No changes",
+    priceChangeHint: "Price changes are saved to the history.",
+  },
+
+  companies: {
+    title: "Companies",
+    subtitle: "The suppliers you buy materials from",
+    label: "Company",
+    add: "Add company",
+    fab: "Company",
+    search: "Search company, phone or city…",
+    notFound: "No companies found",
+    empty: "No companies yet",
+    emptyText: "Add your suppliers to link them to materials.",
+    colCompany: "Company",
+    colPhone: "Phone",
+    colMaterials: "Materials",
+    colSold: "Sold to clients",
+    viewMaterials: "View materials",
+    none: "No company",
+    all: "All companies",
+    added: "Company added",
+    updated: "Company updated",
+    deleted: "Company deleted",
+    deleteTitle: "Delete company?",
+    deleteText: (name, n) =>
+      `"${name}" will be deleted. ${n} catalog ${plural(n, "material stays", "materials stay")}, without a company.`,
+    addTitle: "Add company",
+    editTitle: "Edit company",
+    description: "Only the name is required",
+    save: "Save company",
+    namePh: "e.g. Fero-Beton LLC",
+  },
+
+  history: {
+    title: "Total history",
+    subtitle: "Total across all clients, per year",
+    allTime: "All time",
+    totalFor: (period) => `Total · ${period}`,
+    byMonth: (year) => `By month · ${year}`,
+    entriesIn: (n) => `${n} ${plural(n, "material", "materials")}`,
   },
 
   settings: {

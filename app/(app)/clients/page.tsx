@@ -8,6 +8,7 @@ import { ClientForm } from "@/components/client-form";
 import { Fab, PageHeader } from "@/components/page-header";
 import { Avatar, Button, Card, Confirm, Empty, Menu, SearchBox, Stat } from "@/components/ui";
 import { useToast } from "@/components/toast";
+import { PeriodTabs, TotalHistory, historyYears, type Period } from "@/components/total-history";
 import { dateSq, euro } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { sumEntries, useStore } from "@/lib/store";
@@ -34,7 +35,10 @@ export default function ClientsPage() {
       .sort((a, b) => (b.last || b.createdAt).localeCompare(a.last || a.createdAt));
   }, [clients, entries, q]);
 
-  const grand = sumEntries(entries);
+  const [period, setPeriod] = useState<Period>("all");
+  const years = useMemo(() => historyYears(entries), [entries]);
+  const inPeriod = period === "all" ? entries : entries.filter((e) => e.date.startsWith(period));
+  const grand = sumEntries(inPeriod);
 
   const openNew = () => {
     setEditing(null);
@@ -53,11 +57,21 @@ export default function ClientsPage() {
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Stat accent className="col-span-2 sm:col-span-1" label={t.clients.statTotal} value={euro(grand)} icon={<Wallet size={15} />} />
+      <PeriodTabs years={years} value={period} onChange={setPeriod} />
+
+      <div className="mb-6 mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <Stat
+          accent
+          className="col-span-2 sm:col-span-1"
+          label={period === "all" ? t.clients.statTotal : t.history.totalFor(period)}
+          value={euro(grand)}
+          icon={<Wallet size={15} />}
+        />
         <Stat label={t.clients.statClients} value={clients.length} icon={<Users size={15} />} />
-        <Stat label={t.clients.statEntries} value={entries.length} icon={<Package size={15} />} />
+        <Stat label={t.clients.statEntries} value={inPeriod.length} icon={<Package size={15} />} />
       </div>
+
+      <TotalHistory entries={entries} years={years} period={period} onPeriod={setPeriod} />
 
       <Card className="overflow-hidden">
         <div className="border-b border-line p-3">
