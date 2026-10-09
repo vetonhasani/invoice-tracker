@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { initials } from "@/lib/format";
 import { LANGS, useT } from "@/lib/i18n";
@@ -258,13 +259,49 @@ export function Menu({
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<React.CSSProperties | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // The list is portaled to <body> with fixed positioning, so cards with overflow-hidden
+  // (tables, lists) and modals can't clip it. Opens upward when there's no room below.
+  useLayoutEffect(() => {
+    if (!open) return setPos(null);
+    const r = ref.current!.getBoundingClientRect();
+    const h = menuRef.current?.offsetHeight ?? 0;
+    const gap = 6;
+    const up = r.bottom + gap + h > window.innerHeight - 8 && r.top - gap - h > 8;
+    setPos({
+      top: up ? r.top - gap - h : r.bottom + gap,
+      ...(align === "right" ? { right: Math.max(8, window.innerWidth - r.right) } : { left: Math.max(8, r.left) }),
+    });
+  }, [open, align]);
+
   useEffect(() => {
     if (!open) return;
-    const h = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    const outside = (e: MouseEvent) => {
+      const n = e.target as Node;
+      if (!ref.current?.contains(n) && !menuRef.current?.contains(n)) setOpen(false);
+    };
+    // capture phase + stop: Escape closes only the menu, not a modal underneath
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setOpen(false);
+    };
+    const close = () => setOpen(false); // the trigger moved; don't leave the list floating
+    document.addEventListener("mousedown", outside);
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
   }, [open]);
+
   return (
     <div ref={ref} className="relative inline-block">
       <span
@@ -276,34 +313,39 @@ export function Menu({
       >
         {trigger(open)}
       </span>
-      {open && (
-        <div
-          className={cn(
-            "absolute z-40 mt-1.5 min-w-44 animate-pop-in rounded-xl border border-line bg-white p-1.5 shadow-pop",
-            align === "right" ? "right-0" : "left-0"
-          )}
-        >
-          {items.map((it) => (
-            <button
-              key={it.label}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setOpen(false);
-                it.onClick();
-              }}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium",
-                it.danger ? "text-red-600 hover:bg-red-50" : "text-ink hover:bg-slate-100"
-              )}
-            >
-              {it.icon}
-              {it.label}
-              {it.right && <span className="ml-auto pl-3">{it.right}</span>}
-            </button>
-          ))}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={pos ?? { top: -9999, left: -9999 }}
+            className={cn(
+              "fixed z-[70] min-w-44 rounded-xl border border-line bg-white p-1.5 shadow-pop",
+              pos && "animate-pop-in"
+            )}
+          >
+            {items.map((it) => (
+              <button
+                key={it.label}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpen(false);
+                  it.onClick();
+                }}
+                className={cn(
+                  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium",
+                  it.danger ? "text-red-600 hover:bg-red-50" : "text-ink hover:bg-slate-100"
+                )}
+              >
+                {it.icon}
+                {it.label}
+                {it.right && <span className="ml-auto pl-3">{it.right}</span>}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
