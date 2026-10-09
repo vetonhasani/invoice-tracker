@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, LogOut, RotateCcw, User } from "lucide-react";
+import { CloudUpload, KeyRound, LogOut, User } from "lucide-react";
 import { PasswordInput, fakeDelay } from "@/components/auth-bits";
 import { PageHeader } from "@/components/page-header";
-import { Avatar, Button, Card, Confirm, Field, Input, LangSwitch } from "@/components/ui";
+import { Avatar, Button, Card, Field, Input, LangSwitch } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 
 export default function SettingsPage() {
-  const { user, login, logout, resetDemo } = useStore();
+  const { user, login, logout } = useStore();
   const { t } = useT();
   const toast = useToast();
   const router = useRouter();
@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const [email, setEmail] = useState(user?.email ?? "");
   const [pw, setPw] = useState({ current: "", next: "" });
   const [pwErr, setPwErr] = useState("");
-  const [resetOpen, setResetOpen] = useState(false);
 
   if (!user) return null;
 
@@ -80,10 +79,11 @@ export default function SettingsPage() {
 
       <Card className="mt-5 divide-y divide-line">
         <Row title={t.lang.label} text={t.lang.text} action={<LangSwitch />} />
+        {/* Placeholder — will back up to the server once the database is connected */}
         <Row
-          title={t.settings.resetTitle}
-          text={t.settings.resetText}
-          action={<Button variant="secondary" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> {t.settings.reset}</Button>}
+          title={t.settings.backupTitle}
+          text={t.settings.backupText}
+          action={<Button variant="secondary"><CloudUpload size={15} /> {t.settings.backup}</Button>}
         />
         <Row
           title={t.settings.logoutTitle}
@@ -102,18 +102,6 @@ export default function SettingsPage() {
           }
         />
       </Card>
-
-      <Confirm
-        open={resetOpen}
-        onClose={() => setResetOpen(false)}
-        onConfirm={() => {
-          resetDemo();
-          toast(t.settings.resetDone);
-        }}
-        title={t.settings.resetConfirmTitle}
-        text={t.settings.resetConfirmText}
-        confirmLabel={t.settings.reset}
-      />
     </>
   );
 }
